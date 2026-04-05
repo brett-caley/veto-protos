@@ -344,7 +344,7 @@ const file_veto_v1_user_service_proto_rawDesc = "" +
 	"\vUserService\x129\n" +
 	"\x06Signup\x12\x16.veto.v1.SignupRequest\x1a\x17.veto.v1.SignupResponse\x126\n" +
 	"\x05Login\x12\x15.veto.v1.LoginRequest\x1a\x16.veto.v1.LoginResponse\x126\n" +
-	"\x05GetMe\x12\x15.veto.v1.GetMeRequest\x1a\x16.veto.v1.GetMeResponseB0Z.github.com/brett-caley/veto/gen/veto/v1;vetov1b\x06proto3"
+	"\x05GetMe\x12\x15.veto.v1.GetMeRequest\x1a\x16.veto.v1.GetMeResponseB:Z8github.com/brett-caley/veto-protos/gen/go/veto/v1;vetov1b\x06proto3"
 
 var (
 	file_veto_v1_user_service_proto_rawDescOnce sync.Once

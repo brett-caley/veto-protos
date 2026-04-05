@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package veto.v1;
 
-option go_package = "github.com/brett-caley/veto/gen/veto/v1;vetov1";
+option go_package = "github.com/brett-caley/veto-protos/gen/go/veto/v1;vetov1";
 
 import "google/protobuf/timestamp.proto";
 

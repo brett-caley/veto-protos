@@ -745,7 +745,7 @@ const file_veto_v1_common_proto_rawDesc = "" +
 	"VoteAction\x12\x1b\n" +
 	"\x17VOTE_ACTION_UNSPECIFIED\x10\x00\x12\x14\n" +
 	"\x10VOTE_ACTION_VETO\x10\x01\x12\x14\n" +
-	"\x10VOTE_ACTION_KEEP\x10\x02B0Z.github.com/brett-caley/veto/gen/veto/v1;vetov1b\x06proto3"
+	"\x10VOTE_ACTION_KEEP\x10\x02B:Z8github.com/brett-caley/veto-protos/gen/go/veto/v1;vetov1b\x06proto3"
 
 var (
 	file_veto_v1_common_proto_rawDescOnce sync.Once
