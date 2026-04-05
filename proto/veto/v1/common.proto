@@ -1,0 +1,78 @@
+syntax = "proto3";
+
+package veto.v1;
+
+option go_package = "github.com/brett-caley/veto/gen/veto/v1;vetov1";
+
+import "google/protobuf/timestamp.proto";
+
+message User {
+  string id = 1;
+  string email = 2;
+  string display_name = 3;
+  optional string avatar_url = 4;
+  google.protobuf.Timestamp created_at = 5;
+}
+
+message Participant {
+  string user_id = 1;
+  string display_name = 2;
+  optional string avatar_url = 3;
+  google.protobuf.Timestamp joined_at = 4;
+  bool is_connected = 5;
+}
+
+message SubmittedBy {
+  string user_id = 1;
+  string display_name = 2;
+}
+
+message Idea {
+  string id = 1;
+  string session_id = 2;
+  string text = 3;
+  optional string image_url = 4;
+  SubmittedBy submitted_by = 5;
+  optional int32 eliminated_in_round = 6;
+  google.protobuf.Timestamp created_at = 7;
+}
+
+message Vote {
+  string session_id = 1;
+  string idea_id = 2;
+  string user_id = 3;
+  int32 round = 4;
+  VoteAction action = 5;
+  optional string comment = 6;
+  google.protobuf.Timestamp created_at = 7;
+}
+
+message Session {
+  string id = 1;
+  string code = 2;
+  string title = 3;
+  string host_id = 4;
+  SessionPhase phase = 5;
+  int32 current_round = 6;
+  google.protobuf.Timestamp created_at = 7;
+  optional google.protobuf.Timestamp completed_at = 8;
+}
+
+message SessionDetail {
+  Session session = 1;
+  repeated Participant participants = 2;
+  repeated Idea ideas = 3;
+}
+
+enum SessionPhase {
+  SESSION_PHASE_UNSPECIFIED = 0;
+  SESSION_PHASE_LOBBY = 1;
+  SESSION_PHASE_VOTING = 2;
+  SESSION_PHASE_COMPLETE = 3;
+}
+
+enum VoteAction {
+  VOTE_ACTION_UNSPECIFIED = 0;
+  VOTE_ACTION_VETO = 1;
+  VOTE_ACTION_KEEP = 2;
+}

@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package veto.v1;
+
+option go_package = "github.com/brett-caley/veto/gen/veto/v1;vetov1";
+
+import "veto/v1/common.proto";
+
+service UserService {
+  rpc Signup(SignupRequest) returns (SignupResponse);
+  rpc Login(LoginRequest) returns (LoginResponse);
+  rpc GetMe(GetMeRequest) returns (GetMeResponse);
+}
+
+message SignupRequest {
+  // Required. Valid email format, must be unique.
+  string email = 1;
+  // Required. Minimum 8 characters.
+  string password = 2;
+  // Required. 1-50 characters.
+  string display_name = 3;
+}
+
+message SignupResponse {
+  User user = 1;
+  string token = 2;
+}
+
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+  User user = 1;
+  string token = 2;
+}
+
+message GetMeRequest {}
+
+message GetMeResponse {
+  User user = 1;
+}
