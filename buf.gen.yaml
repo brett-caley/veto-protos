@@ -6,3 +6,6 @@ plugins:
   - remote: buf.build/grpc/go
     out: gen/go
     opt: paths=source_relative
+  - local: protoc-gen-dart
+    out: gen/dart
+    opt: grpc
