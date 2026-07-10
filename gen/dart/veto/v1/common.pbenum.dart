@@ -39,26 +39,54 @@ class SessionPhase extends $pb.ProtobufEnum {
   const SessionPhase._(super.value, super.name);
 }
 
-class VoteAction extends $pb.ProtobufEnum {
-  static const VoteAction VOTE_ACTION_UNSPECIFIED =
-      VoteAction._(0, _omitEnumNames ? '' : 'VOTE_ACTION_UNSPECIFIED');
-  static const VoteAction VOTE_ACTION_VETO =
-      VoteAction._(1, _omitEnumNames ? '' : 'VOTE_ACTION_VETO');
-  static const VoteAction VOTE_ACTION_KEEP =
-      VoteAction._(2, _omitEnumNames ? '' : 'VOTE_ACTION_KEEP');
+class VetoStrategy extends $pb.ProtobufEnum {
+  static const VetoStrategy VETO_STRATEGY_UNSPECIFIED =
+      VetoStrategy._(0, _omitEnumNames ? '' : 'VETO_STRATEGY_UNSPECIFIED');
+  static const VetoStrategy VETO_STRATEGY_RAW =
+      VetoStrategy._(1, _omitEnumNames ? '' : 'VETO_STRATEGY_RAW');
 
-  static const $core.List<VoteAction> values = <VoteAction>[
-    VOTE_ACTION_UNSPECIFIED,
-    VOTE_ACTION_VETO,
-    VOTE_ACTION_KEEP,
+  /// Reserved. Not implemented for MVP — CreateSession rejects it. See VETO_MECHANICS.md open questions.
+  static const VetoStrategy VETO_STRATEGY_TOKEN =
+      VetoStrategy._(2, _omitEnumNames ? '' : 'VETO_STRATEGY_TOKEN');
+
+  static const $core.List<VetoStrategy> values = <VetoStrategy>[
+    VETO_STRATEGY_UNSPECIFIED,
+    VETO_STRATEGY_RAW,
+    VETO_STRATEGY_TOKEN,
   ];
 
-  static final $core.List<VoteAction?> _byValue =
+  static final $core.List<VetoStrategy?> _byValue =
       $pb.ProtobufEnum.$_initByValueList(values, 2);
-  static VoteAction? valueOf($core.int value) =>
+  static VetoStrategy? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 
-  const VoteAction._(super.value, super.name);
+  const VetoStrategy._(super.value, super.name);
+}
+
+class Tempo extends $pb.ProtobufEnum {
+  static const Tempo TEMPO_UNSPECIFIED =
+      Tempo._(0, _omitEnumNames ? '' : 'TEMPO_UNSPECIFIED');
+
+  /// Short round timer, no force-advance — round waits out the timer. See VETO_MECHANICS.md §6.
+  static const Tempo TEMPO_QUICK_DECISION =
+      Tempo._(1, _omitEnumNames ? '' : 'TEMPO_QUICK_DECISION');
+
+  /// Long/no round timer, host can ForceAdvanceRound. See VETO_MECHANICS.md §6.
+  static const Tempo TEMPO_ONGOING =
+      Tempo._(2, _omitEnumNames ? '' : 'TEMPO_ONGOING');
+
+  static const $core.List<Tempo> values = <Tempo>[
+    TEMPO_UNSPECIFIED,
+    TEMPO_QUICK_DECISION,
+    TEMPO_ONGOING,
+  ];
+
+  static final $core.List<Tempo?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 2);
+  static Tempo? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const Tempo._(super.value, super.name);
 }
 
 const $core.bool _omitEnumNames =

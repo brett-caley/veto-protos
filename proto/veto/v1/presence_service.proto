@@ -1,0 +1,130 @@
+syntax = "proto3";
+
+package veto.v1;
+
+option go_package = "github.com/brett-caley/veto-protos/gen/go/veto/v1;vetov1";
+
+import "google/protobuf/timestamp.proto";
+import "veto/v1/common.proto";
+
+// Owned by the Presence & Real-Time Service (SERVICE_ARCHITECTURE.md §3.6) — a separate
+// deployable from SessionService/IdeaService/VoteService.
+service PresenceService {
+  rpc StreamEvents(StreamEventsRequest) returns (stream SessionEvent);
+}
+
+// Subscribe to real-time session events via server streaming. The first message is always a
+// StateSnapshot. Auth via metadata.
+//
+// On disconnect: client waits 1 second, reconnects, receives a fresh StateSnapshot.
+// Errors (stream terminates): UNAUTHENTICATED (invalid/missing JWT), NOT_FOUND (no session
+// with that code).
+message StreamEventsRequest {
+  string code = 1;
+}
+
+// ---------------------------------------------------------------------------
+// Server Streaming Events
+//
+// All real-time events are delivered via StreamEvents. Each message is a SessionEvent with a
+// oneof event payload. There is no per-vote event: individual choices never broadcast mid-round,
+// only the aggregate lock count (RoundLockProgress) and the all-at-once reveal
+// (RoundResolved/WinnerRevealed) — see VETO_MECHANICS.md §3.
+// ---------------------------------------------------------------------------
+
+message SessionEvent {
+  google.protobuf.Timestamp timestamp = 1;
+  oneof event {
+    StateSnapshot state_snapshot = 2;
+    ParticipantJoined participant_joined = 3;
+    ParticipantLeft participant_left = 4;
+    IdeaSubmitted idea_submitted = 5;
+    IdeaRemoved idea_removed = 6;
+    VotingStarted voting_started = 7;
+    RoundLockProgress round_lock_progress = 8;
+    RoundResolved round_resolved = 9;
+    WinnerRevealed winner_revealed = 10;
+  }
+}
+
+// Sent immediately on connect (or reconnect). Contains the full current state of the session.
+// The client must replace its local state entirely with this snapshot — do not merge. No
+// in-progress vote content is ever included here — only lock-progress counts and past
+// (already-revealed) rounds, consistent with the blind-round rule in VETO_MECHANICS.md §3.
+message StateSnapshot {
+  Session session = 1;
+  repeated Participant participants = 2;
+  repeated Idea ideas = 3;
+  // Current round's lock progress. Unset unless session.phase == SESSION_PHASE_VOTING.
+  optional RoundLockProgress lock_progress = 4;
+  // The most recently resolved round, if any — lets a client reconnecting mid-reveal
+  // still show the last reveal instead of nothing. Unset if no round has resolved yet.
+  optional RoundResolved last_resolved_round = 5;
+  optional Idea winner = 6;
+}
+
+message ParticipantJoined {
+  string user_id = 1;
+  string display_name = 2;
+  optional string avatar_url = 3;
+}
+
+message ParticipantLeft {
+  string user_id = 1;
+}
+
+// Lobby phase only, so authorship is always shown (see SubmitIdea).
+message IdeaSubmitted {
+  string id = 1;
+  string text = 2;
+  optional string image_url = 3;
+  SubmittedBy submitted_by = 4;
+}
+
+message IdeaRemoved {
+  string id = 1;
+}
+
+message VotingStarted {
+  int32 round = 1;
+  int32 ideas_count = 2;
+  int32 participants_count = 3;
+}
+
+// Live count of how many participants have locked their submission for the current round.
+// Count only — never reveals which ideas anyone has vetoed. Broadcast every time a participant
+// locks or unlocks.
+message RoundLockProgress {
+  int32 round = 1;
+  int32 locked_count = 2;
+  int32 participants_count = 3;
+}
+
+message EliminatedIdea {
+  string idea_id = 1;
+  string text = 2;
+  int32 disapproval_score = 3;
+  // True if this idea was at the N/N+1 score boundary and lost the random tie-break.
+  bool tie_broken_randomly = 4;
+}
+
+// A round resolved — every vote cast this round is revealed simultaneously alongside the
+// computed elimination, and (unless this was the deciding round, in which case WinnerRevealed
+// fires instead) the next round begins.
+message RoundResolved {
+  int32 completed_round = 1;
+  int32 new_round = 2;
+  repeated EliminatedIdea eliminated = 3;
+  int32 remaining_ideas = 4;
+  // Every vote cast this round, by every participant, on every idea active this round.
+  repeated RevealedVote votes = 5;
+  // True if elimination used the no-signal random-pick path (every idea scored 0).
+  bool no_signal_fallback = 6;
+}
+
+// Exactly one idea remains — the session is complete.
+message WinnerRevealed {
+  Idea idea = 1;
+  // Full reveal of the deciding round's votes, same as RoundResolved.votes.
+  repeated RevealedVote final_round_votes = 2;
+}

@@ -74,53 +74,105 @@ func (SessionPhase) EnumDescriptor() ([]byte, []int) {
 	return file_veto_v1_common_proto_rawDescGZIP(), []int{0}
 }
 
-type VoteAction int32
+type VetoStrategy int32
 
 const (
-	VoteAction_VOTE_ACTION_UNSPECIFIED VoteAction = 0
-	VoteAction_VOTE_ACTION_VETO        VoteAction = 1
-	VoteAction_VOTE_ACTION_KEEP        VoteAction = 2
+	VetoStrategy_VETO_STRATEGY_UNSPECIFIED VetoStrategy = 0
+	VetoStrategy_VETO_STRATEGY_RAW         VetoStrategy = 1
+	// Reserved. Not implemented for MVP — CreateSession rejects it. See VETO_MECHANICS.md open questions.
+	VetoStrategy_VETO_STRATEGY_TOKEN VetoStrategy = 2
 )
 
-// Enum value maps for VoteAction.
+// Enum value maps for VetoStrategy.
 var (
-	VoteAction_name = map[int32]string{
-		0: "VOTE_ACTION_UNSPECIFIED",
-		1: "VOTE_ACTION_VETO",
-		2: "VOTE_ACTION_KEEP",
+	VetoStrategy_name = map[int32]string{
+		0: "VETO_STRATEGY_UNSPECIFIED",
+		1: "VETO_STRATEGY_RAW",
+		2: "VETO_STRATEGY_TOKEN",
 	}
-	VoteAction_value = map[string]int32{
-		"VOTE_ACTION_UNSPECIFIED": 0,
-		"VOTE_ACTION_VETO":        1,
-		"VOTE_ACTION_KEEP":        2,
+	VetoStrategy_value = map[string]int32{
+		"VETO_STRATEGY_UNSPECIFIED": 0,
+		"VETO_STRATEGY_RAW":         1,
+		"VETO_STRATEGY_TOKEN":       2,
 	}
 )
 
-func (x VoteAction) Enum() *VoteAction {
-	p := new(VoteAction)
+func (x VetoStrategy) Enum() *VetoStrategy {
+	p := new(VetoStrategy)
 	*p = x
 	return p
 }
 
-func (x VoteAction) String() string {
+func (x VetoStrategy) String() string {
 	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
 }
 
-func (VoteAction) Descriptor() protoreflect.EnumDescriptor {
+func (VetoStrategy) Descriptor() protoreflect.EnumDescriptor {
 	return file_veto_v1_common_proto_enumTypes[1].Descriptor()
 }
 
-func (VoteAction) Type() protoreflect.EnumType {
+func (VetoStrategy) Type() protoreflect.EnumType {
 	return &file_veto_v1_common_proto_enumTypes[1]
 }
 
-func (x VoteAction) Number() protoreflect.EnumNumber {
+func (x VetoStrategy) Number() protoreflect.EnumNumber {
 	return protoreflect.EnumNumber(x)
 }
 
-// Deprecated: Use VoteAction.Descriptor instead.
-func (VoteAction) EnumDescriptor() ([]byte, []int) {
+// Deprecated: Use VetoStrategy.Descriptor instead.
+func (VetoStrategy) EnumDescriptor() ([]byte, []int) {
 	return file_veto_v1_common_proto_rawDescGZIP(), []int{1}
+}
+
+type Tempo int32
+
+const (
+	Tempo_TEMPO_UNSPECIFIED Tempo = 0
+	// Short round timer, no force-advance — round waits out the timer. See VETO_MECHANICS.md §6.
+	Tempo_TEMPO_QUICK_DECISION Tempo = 1
+	// Long/no round timer, host can ForceAdvanceRound. See VETO_MECHANICS.md §6.
+	Tempo_TEMPO_ONGOING Tempo = 2
+)
+
+// Enum value maps for Tempo.
+var (
+	Tempo_name = map[int32]string{
+		0: "TEMPO_UNSPECIFIED",
+		1: "TEMPO_QUICK_DECISION",
+		2: "TEMPO_ONGOING",
+	}
+	Tempo_value = map[string]int32{
+		"TEMPO_UNSPECIFIED":    0,
+		"TEMPO_QUICK_DECISION": 1,
+		"TEMPO_ONGOING":        2,
+	}
+)
+
+func (x Tempo) Enum() *Tempo {
+	p := new(Tempo)
+	*p = x
+	return p
+}
+
+func (x Tempo) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (Tempo) Descriptor() protoreflect.EnumDescriptor {
+	return file_veto_v1_common_proto_enumTypes[2].Descriptor()
+}
+
+func (Tempo) Type() protoreflect.EnumType {
+	return &file_veto_v1_common_proto_enumTypes[2]
+}
+
+func (x Tempo) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use Tempo.Descriptor instead.
+func (Tempo) EnumDescriptor() ([]byte, []int) {
+	return file_veto_v1_common_proto_rawDescGZIP(), []int{2}
 }
 
 type User struct {
@@ -327,13 +379,15 @@ func (x *SubmittedBy) GetDisplayName() string {
 	return ""
 }
 
+// Unset while session.phase == SESSION_PHASE_VOTING (anonymity during the elimination round —
+// see VETO_MECHANICS.md §2). Present in SESSION_PHASE_LOBBY (The Board) and SESSION_PHASE_COMPLETE.
 type Idea struct {
 	state             protoimpl.MessageState `protogen:"open.v1"`
 	Id                string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	SessionId         string                 `protobuf:"bytes,2,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
 	Text              string                 `protobuf:"bytes,3,opt,name=text,proto3" json:"text,omitempty"`
 	ImageUrl          *string                `protobuf:"bytes,4,opt,name=image_url,json=imageUrl,proto3,oneof" json:"image_url,omitempty"`
-	SubmittedBy       *SubmittedBy           `protobuf:"bytes,5,opt,name=submitted_by,json=submittedBy,proto3" json:"submitted_by,omitempty"`
+	SubmittedBy       *SubmittedBy           `protobuf:"bytes,5,opt,name=submitted_by,json=submittedBy,proto3,oneof" json:"submitted_by,omitempty"`
 	EliminatedInRound *int32                 `protobuf:"varint,6,opt,name=eliminated_in_round,json=eliminatedInRound,proto3,oneof" json:"eliminated_in_round,omitempty"`
 	CreatedAt         *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	unknownFields     protoimpl.UnknownFields
@@ -419,15 +473,17 @@ func (x *Idea) GetCreatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+// A participant's veto state on one idea for one round. Presence of vetoed=true is the only
+// signal — there is no explicit "keep" action (see VETO_MECHANICS.md §5, Raw Veto).
 type Vote struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
 	IdeaId        string                 `protobuf:"bytes,2,opt,name=idea_id,json=ideaId,proto3" json:"idea_id,omitempty"`
 	UserId        string                 `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	Round         int32                  `protobuf:"varint,4,opt,name=round,proto3" json:"round,omitempty"`
-	Action        VoteAction             `protobuf:"varint,5,opt,name=action,proto3,enum=veto.v1.VoteAction" json:"action,omitempty"`
+	Vetoed        bool                   `protobuf:"varint,5,opt,name=vetoed,proto3" json:"vetoed,omitempty"`
 	Comment       *string                `protobuf:"bytes,6,opt,name=comment,proto3,oneof" json:"comment,omitempty"`
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -490,11 +546,11 @@ func (x *Vote) GetRound() int32 {
 	return 0
 }
 
-func (x *Vote) GetAction() VoteAction {
+func (x *Vote) GetVetoed() bool {
 	if x != nil {
-		return x.Action
+		return x.Vetoed
 	}
-	return VoteAction_VOTE_ACTION_UNSPECIFIED
+	return false
 }
 
 func (x *Vote) GetComment() string {
@@ -504,30 +560,111 @@ func (x *Vote) GetComment() string {
 	return ""
 }
 
-func (x *Vote) GetCreatedAt() *timestamppb.Timestamp {
+func (x *Vote) GetUpdatedAt() *timestamppb.Timestamp {
 	if x != nil {
-		return x.CreatedAt
+		return x.UpdatedAt
 	}
 	return nil
 }
 
-type Session struct {
+// A single participant's vote, denormalized with display_name for reveal payloads
+// (RoundResolved, WinnerRevealed, GetVetoTrail) where the client has no other way to resolve it.
+type RevealedVote struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Code          string                 `protobuf:"bytes,2,opt,name=code,proto3" json:"code,omitempty"`
-	Title         string                 `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
-	HostId        string                 `protobuf:"bytes,4,opt,name=host_id,json=hostId,proto3" json:"host_id,omitempty"`
-	Phase         SessionPhase           `protobuf:"varint,5,opt,name=phase,proto3,enum=veto.v1.SessionPhase" json:"phase,omitempty"`
-	CurrentRound  int32                  `protobuf:"varint,6,opt,name=current_round,json=currentRound,proto3" json:"current_round,omitempty"`
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	CompletedAt   *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=completed_at,json=completedAt,proto3,oneof" json:"completed_at,omitempty"`
+	IdeaId        string                 `protobuf:"bytes,1,opt,name=idea_id,json=ideaId,proto3" json:"idea_id,omitempty"`
+	UserId        string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	DisplayName   string                 `protobuf:"bytes,3,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
+	Vetoed        bool                   `protobuf:"varint,4,opt,name=vetoed,proto3" json:"vetoed,omitempty"`
+	Comment       *string                `protobuf:"bytes,5,opt,name=comment,proto3,oneof" json:"comment,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
+func (x *RevealedVote) Reset() {
+	*x = RevealedVote{}
+	mi := &file_veto_v1_common_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RevealedVote) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RevealedVote) ProtoMessage() {}
+
+func (x *RevealedVote) ProtoReflect() protoreflect.Message {
+	mi := &file_veto_v1_common_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RevealedVote.ProtoReflect.Descriptor instead.
+func (*RevealedVote) Descriptor() ([]byte, []int) {
+	return file_veto_v1_common_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *RevealedVote) GetIdeaId() string {
+	if x != nil {
+		return x.IdeaId
+	}
+	return ""
+}
+
+func (x *RevealedVote) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *RevealedVote) GetDisplayName() string {
+	if x != nil {
+		return x.DisplayName
+	}
+	return ""
+}
+
+func (x *RevealedVote) GetVetoed() bool {
+	if x != nil {
+		return x.Vetoed
+	}
+	return false
+}
+
+func (x *RevealedVote) GetComment() string {
+	if x != nil && x.Comment != nil {
+		return *x.Comment
+	}
+	return ""
+}
+
+type Session struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	Id               string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Code             string                 `protobuf:"bytes,2,opt,name=code,proto3" json:"code,omitempty"`
+	Title            string                 `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
+	HostId           string                 `protobuf:"bytes,4,opt,name=host_id,json=hostId,proto3" json:"host_id,omitempty"`
+	Phase            SessionPhase           `protobuf:"varint,5,opt,name=phase,proto3,enum=veto.v1.SessionPhase" json:"phase,omitempty"`
+	CurrentRound     int32                  `protobuf:"varint,6,opt,name=current_round,json=currentRound,proto3" json:"current_round,omitempty"`
+	VetoStrategy     VetoStrategy           `protobuf:"varint,7,opt,name=veto_strategy,json=vetoStrategy,proto3,enum=veto.v1.VetoStrategy" json:"veto_strategy,omitempty"`
+	Tempo            Tempo                  `protobuf:"varint,8,opt,name=tempo,proto3,enum=veto.v1.Tempo" json:"tempo,omitempty"`
+	TargetRoundCount int32                  `protobuf:"varint,9,opt,name=target_round_count,json=targetRoundCount,proto3" json:"target_round_count,omitempty"`
+	CreatedAt        *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	CompletedAt      *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=completed_at,json=completedAt,proto3,oneof" json:"completed_at,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
 func (x *Session) Reset() {
 	*x = Session{}
-	mi := &file_veto_v1_common_proto_msgTypes[5]
+	mi := &file_veto_v1_common_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -539,7 +676,7 @@ func (x *Session) String() string {
 func (*Session) ProtoMessage() {}
 
 func (x *Session) ProtoReflect() protoreflect.Message {
-	mi := &file_veto_v1_common_proto_msgTypes[5]
+	mi := &file_veto_v1_common_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -552,7 +689,7 @@ func (x *Session) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Session.ProtoReflect.Descriptor instead.
 func (*Session) Descriptor() ([]byte, []int) {
-	return file_veto_v1_common_proto_rawDescGZIP(), []int{5}
+	return file_veto_v1_common_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *Session) GetId() string {
@@ -597,6 +734,27 @@ func (x *Session) GetCurrentRound() int32 {
 	return 0
 }
 
+func (x *Session) GetVetoStrategy() VetoStrategy {
+	if x != nil {
+		return x.VetoStrategy
+	}
+	return VetoStrategy_VETO_STRATEGY_UNSPECIFIED
+}
+
+func (x *Session) GetTempo() Tempo {
+	if x != nil {
+		return x.Tempo
+	}
+	return Tempo_TEMPO_UNSPECIFIED
+}
+
+func (x *Session) GetTargetRoundCount() int32 {
+	if x != nil {
+		return x.TargetRoundCount
+	}
+	return 0
+}
+
 func (x *Session) GetCreatedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.CreatedAt
@@ -622,7 +780,7 @@ type SessionDetail struct {
 
 func (x *SessionDetail) Reset() {
 	*x = SessionDetail{}
-	mi := &file_veto_v1_common_proto_msgTypes[6]
+	mi := &file_veto_v1_common_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -634,7 +792,7 @@ func (x *SessionDetail) String() string {
 func (*SessionDetail) ProtoMessage() {}
 
 func (x *SessionDetail) ProtoReflect() protoreflect.Message {
-	mi := &file_veto_v1_common_proto_msgTypes[6]
+	mi := &file_veto_v1_common_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -647,7 +805,7 @@ func (x *SessionDetail) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SessionDetail.ProtoReflect.Descriptor instead.
 func (*SessionDetail) Descriptor() ([]byte, []int) {
-	return file_veto_v1_common_proto_rawDescGZIP(), []int{6}
+	return file_veto_v1_common_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *SessionDetail) GetSession() *Session {
@@ -695,42 +853,55 @@ const file_veto_v1_common_proto_rawDesc = "" +
 	"\v_avatar_url\"I\n" +
 	"\vSubmittedBy\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12!\n" +
-	"\fdisplay_name\x18\x02 \x01(\tR\vdisplayName\"\xba\x02\n" +
+	"\fdisplay_name\x18\x02 \x01(\tR\vdisplayName\"\xd0\x02\n" +
 	"\x04Idea\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1d\n" +
 	"\n" +
 	"session_id\x18\x02 \x01(\tR\tsessionId\x12\x12\n" +
 	"\x04text\x18\x03 \x01(\tR\x04text\x12 \n" +
-	"\timage_url\x18\x04 \x01(\tH\x00R\bimageUrl\x88\x01\x01\x127\n" +
-	"\fsubmitted_by\x18\x05 \x01(\v2\x14.veto.v1.SubmittedByR\vsubmittedBy\x123\n" +
-	"\x13eliminated_in_round\x18\x06 \x01(\x05H\x01R\x11eliminatedInRound\x88\x01\x01\x129\n" +
+	"\timage_url\x18\x04 \x01(\tH\x00R\bimageUrl\x88\x01\x01\x12<\n" +
+	"\fsubmitted_by\x18\x05 \x01(\v2\x14.veto.v1.SubmittedByH\x01R\vsubmittedBy\x88\x01\x01\x123\n" +
+	"\x13eliminated_in_round\x18\x06 \x01(\x05H\x02R\x11eliminatedInRound\x88\x01\x01\x129\n" +
 	"\n" +
 	"created_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAtB\f\n" +
 	"\n" +
-	"_image_urlB\x16\n" +
-	"\x14_eliminated_in_round\"\x80\x02\n" +
+	"_image_urlB\x0f\n" +
+	"\r_submitted_byB\x16\n" +
+	"\x14_eliminated_in_round\"\xeb\x01\n" +
 	"\x04Vote\x12\x1d\n" +
 	"\n" +
 	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x17\n" +
 	"\aidea_id\x18\x02 \x01(\tR\x06ideaId\x12\x17\n" +
 	"\auser_id\x18\x03 \x01(\tR\x06userId\x12\x14\n" +
-	"\x05round\x18\x04 \x01(\x05R\x05round\x12+\n" +
-	"\x06action\x18\x05 \x01(\x0e2\x13.veto.v1.VoteActionR\x06action\x12\x1d\n" +
+	"\x05round\x18\x04 \x01(\x05R\x05round\x12\x16\n" +
+	"\x06vetoed\x18\x05 \x01(\bR\x06vetoed\x12\x1d\n" +
 	"\acomment\x18\x06 \x01(\tH\x00R\acomment\x88\x01\x01\x129\n" +
 	"\n" +
-	"created_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAtB\n" +
+	"updated_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAtB\n" +
 	"\n" +
-	"\b_comment\"\xbe\x02\n" +
+	"\b_comment\"\xa6\x01\n" +
+	"\fRevealedVote\x12\x17\n" +
+	"\aidea_id\x18\x01 \x01(\tR\x06ideaId\x12\x17\n" +
+	"\auser_id\x18\x02 \x01(\tR\x06userId\x12!\n" +
+	"\fdisplay_name\x18\x03 \x01(\tR\vdisplayName\x12\x16\n" +
+	"\x06vetoed\x18\x04 \x01(\bR\x06vetoed\x12\x1d\n" +
+	"\acomment\x18\x05 \x01(\tH\x00R\acomment\x88\x01\x01B\n" +
+	"\n" +
+	"\b_comment\"\xce\x03\n" +
 	"\aSession\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04code\x18\x02 \x01(\tR\x04code\x12\x14\n" +
 	"\x05title\x18\x03 \x01(\tR\x05title\x12\x17\n" +
 	"\ahost_id\x18\x04 \x01(\tR\x06hostId\x12+\n" +
 	"\x05phase\x18\x05 \x01(\x0e2\x15.veto.v1.SessionPhaseR\x05phase\x12#\n" +
-	"\rcurrent_round\x18\x06 \x01(\x05R\fcurrentRound\x129\n" +
+	"\rcurrent_round\x18\x06 \x01(\x05R\fcurrentRound\x12:\n" +
+	"\rveto_strategy\x18\a \x01(\x0e2\x15.veto.v1.VetoStrategyR\fvetoStrategy\x12$\n" +
+	"\x05tempo\x18\b \x01(\x0e2\x0e.veto.v1.TempoR\x05tempo\x12,\n" +
+	"\x12target_round_count\x18\t \x01(\x05R\x10targetRoundCount\x129\n" +
 	"\n" +
-	"created_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12B\n" +
-	"\fcompleted_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampH\x00R\vcompletedAt\x88\x01\x01B\x0f\n" +
+	"created_at\x18\n" +
+	" \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12B\n" +
+	"\fcompleted_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampH\x00R\vcompletedAt\x88\x01\x01B\x0f\n" +
 	"\r_completed_at\"\x9a\x01\n" +
 	"\rSessionDetail\x12*\n" +
 	"\asession\x18\x01 \x01(\v2\x10.veto.v1.SessionR\asession\x128\n" +
@@ -740,12 +911,15 @@ const file_veto_v1_common_proto_rawDesc = "" +
 	"\x19SESSION_PHASE_UNSPECIFIED\x10\x00\x12\x17\n" +
 	"\x13SESSION_PHASE_LOBBY\x10\x01\x12\x18\n" +
 	"\x14SESSION_PHASE_VOTING\x10\x02\x12\x1a\n" +
-	"\x16SESSION_PHASE_COMPLETE\x10\x03*U\n" +
-	"\n" +
-	"VoteAction\x12\x1b\n" +
-	"\x17VOTE_ACTION_UNSPECIFIED\x10\x00\x12\x14\n" +
-	"\x10VOTE_ACTION_VETO\x10\x01\x12\x14\n" +
-	"\x10VOTE_ACTION_KEEP\x10\x02B:Z8github.com/brett-caley/veto-protos/gen/go/veto/v1;vetov1b\x06proto3"
+	"\x16SESSION_PHASE_COMPLETE\x10\x03*]\n" +
+	"\fVetoStrategy\x12\x1d\n" +
+	"\x19VETO_STRATEGY_UNSPECIFIED\x10\x00\x12\x15\n" +
+	"\x11VETO_STRATEGY_RAW\x10\x01\x12\x17\n" +
+	"\x13VETO_STRATEGY_TOKEN\x10\x02*K\n" +
+	"\x05Tempo\x12\x15\n" +
+	"\x11TEMPO_UNSPECIFIED\x10\x00\x12\x18\n" +
+	"\x14TEMPO_QUICK_DECISION\x10\x01\x12\x11\n" +
+	"\rTEMPO_ONGOING\x10\x02B:Z8github.com/brett-caley/veto-protos/gen/go/veto/v1;vetov1b\x06proto3"
 
 var (
 	file_veto_v1_common_proto_rawDescOnce sync.Once
@@ -759,38 +933,41 @@ func file_veto_v1_common_proto_rawDescGZIP() []byte {
 	return file_veto_v1_common_proto_rawDescData
 }
 
-var file_veto_v1_common_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_veto_v1_common_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_veto_v1_common_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
+var file_veto_v1_common_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_veto_v1_common_proto_goTypes = []any{
 	(SessionPhase)(0),             // 0: veto.v1.SessionPhase
-	(VoteAction)(0),               // 1: veto.v1.VoteAction
-	(*User)(nil),                  // 2: veto.v1.User
-	(*Participant)(nil),           // 3: veto.v1.Participant
-	(*SubmittedBy)(nil),           // 4: veto.v1.SubmittedBy
-	(*Idea)(nil),                  // 5: veto.v1.Idea
-	(*Vote)(nil),                  // 6: veto.v1.Vote
-	(*Session)(nil),               // 7: veto.v1.Session
-	(*SessionDetail)(nil),         // 8: veto.v1.SessionDetail
-	(*timestamppb.Timestamp)(nil), // 9: google.protobuf.Timestamp
+	(VetoStrategy)(0),             // 1: veto.v1.VetoStrategy
+	(Tempo)(0),                    // 2: veto.v1.Tempo
+	(*User)(nil),                  // 3: veto.v1.User
+	(*Participant)(nil),           // 4: veto.v1.Participant
+	(*SubmittedBy)(nil),           // 5: veto.v1.SubmittedBy
+	(*Idea)(nil),                  // 6: veto.v1.Idea
+	(*Vote)(nil),                  // 7: veto.v1.Vote
+	(*RevealedVote)(nil),          // 8: veto.v1.RevealedVote
+	(*Session)(nil),               // 9: veto.v1.Session
+	(*SessionDetail)(nil),         // 10: veto.v1.SessionDetail
+	(*timestamppb.Timestamp)(nil), // 11: google.protobuf.Timestamp
 }
 var file_veto_v1_common_proto_depIdxs = []int32{
-	9,  // 0: veto.v1.User.created_at:type_name -> google.protobuf.Timestamp
-	9,  // 1: veto.v1.Participant.joined_at:type_name -> google.protobuf.Timestamp
-	4,  // 2: veto.v1.Idea.submitted_by:type_name -> veto.v1.SubmittedBy
-	9,  // 3: veto.v1.Idea.created_at:type_name -> google.protobuf.Timestamp
-	1,  // 4: veto.v1.Vote.action:type_name -> veto.v1.VoteAction
-	9,  // 5: veto.v1.Vote.created_at:type_name -> google.protobuf.Timestamp
-	0,  // 6: veto.v1.Session.phase:type_name -> veto.v1.SessionPhase
-	9,  // 7: veto.v1.Session.created_at:type_name -> google.protobuf.Timestamp
-	9,  // 8: veto.v1.Session.completed_at:type_name -> google.protobuf.Timestamp
-	7,  // 9: veto.v1.SessionDetail.session:type_name -> veto.v1.Session
-	3,  // 10: veto.v1.SessionDetail.participants:type_name -> veto.v1.Participant
-	5,  // 11: veto.v1.SessionDetail.ideas:type_name -> veto.v1.Idea
-	12, // [12:12] is the sub-list for method output_type
-	12, // [12:12] is the sub-list for method input_type
-	12, // [12:12] is the sub-list for extension type_name
-	12, // [12:12] is the sub-list for extension extendee
-	0,  // [0:12] is the sub-list for field type_name
+	11, // 0: veto.v1.User.created_at:type_name -> google.protobuf.Timestamp
+	11, // 1: veto.v1.Participant.joined_at:type_name -> google.protobuf.Timestamp
+	5,  // 2: veto.v1.Idea.submitted_by:type_name -> veto.v1.SubmittedBy
+	11, // 3: veto.v1.Idea.created_at:type_name -> google.protobuf.Timestamp
+	11, // 4: veto.v1.Vote.updated_at:type_name -> google.protobuf.Timestamp
+	0,  // 5: veto.v1.Session.phase:type_name -> veto.v1.SessionPhase
+	1,  // 6: veto.v1.Session.veto_strategy:type_name -> veto.v1.VetoStrategy
+	2,  // 7: veto.v1.Session.tempo:type_name -> veto.v1.Tempo
+	11, // 8: veto.v1.Session.created_at:type_name -> google.protobuf.Timestamp
+	11, // 9: veto.v1.Session.completed_at:type_name -> google.protobuf.Timestamp
+	9,  // 10: veto.v1.SessionDetail.session:type_name -> veto.v1.Session
+	4,  // 11: veto.v1.SessionDetail.participants:type_name -> veto.v1.Participant
+	6,  // 12: veto.v1.SessionDetail.ideas:type_name -> veto.v1.Idea
+	13, // [13:13] is the sub-list for method output_type
+	13, // [13:13] is the sub-list for method input_type
+	13, // [13:13] is the sub-list for extension type_name
+	13, // [13:13] is the sub-list for extension extendee
+	0,  // [0:13] is the sub-list for field type_name
 }
 
 func init() { file_veto_v1_common_proto_init() }
@@ -803,13 +980,14 @@ func file_veto_v1_common_proto_init() {
 	file_veto_v1_common_proto_msgTypes[3].OneofWrappers = []any{}
 	file_veto_v1_common_proto_msgTypes[4].OneofWrappers = []any{}
 	file_veto_v1_common_proto_msgTypes[5].OneofWrappers = []any{}
+	file_veto_v1_common_proto_msgTypes[6].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_veto_v1_common_proto_rawDesc), len(file_veto_v1_common_proto_rawDesc)),
-			NumEnums:      2,
-			NumMessages:   7,
+			NumEnums:      3,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
