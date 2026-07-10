@@ -297,6 +297,8 @@ class SubmittedBy extends $pb.GeneratedMessage {
   void clearDisplayName() => $_clearField(2);
 }
 
+/// Unset while session.phase == SESSION_PHASE_VOTING (anonymity during the elimination round —
+/// see VETO_MECHANICS.md §2). Present in SESSION_PHASE_LOBBY (The Board) and SESSION_PHASE_COMPLETE.
 class Idea extends $pb.GeneratedMessage {
   factory Idea({
     $core.String? id,
@@ -428,24 +430,26 @@ class Idea extends $pb.GeneratedMessage {
   $0.Timestamp ensureCreatedAt() => $_ensure(6);
 }
 
+/// A participant's veto state on one idea for one round. Presence of vetoed=true is the only
+/// signal — there is no explicit "keep" action (see VETO_MECHANICS.md §5, Raw Veto).
 class Vote extends $pb.GeneratedMessage {
   factory Vote({
     $core.String? sessionId,
     $core.String? ideaId,
     $core.String? userId,
     $core.int? round,
-    VoteAction? action,
+    $core.bool? vetoed,
     $core.String? comment,
-    $0.Timestamp? createdAt,
+    $0.Timestamp? updatedAt,
   }) {
     final result = create();
     if (sessionId != null) result.sessionId = sessionId;
     if (ideaId != null) result.ideaId = ideaId;
     if (userId != null) result.userId = userId;
     if (round != null) result.round = round;
-    if (action != null) result.action = action;
+    if (vetoed != null) result.vetoed = vetoed;
     if (comment != null) result.comment = comment;
-    if (createdAt != null) result.createdAt = createdAt;
+    if (updatedAt != null) result.updatedAt = updatedAt;
     return result;
   }
 
@@ -466,10 +470,9 @@ class Vote extends $pb.GeneratedMessage {
     ..aOS(2, _omitFieldNames ? '' : 'ideaId')
     ..aOS(3, _omitFieldNames ? '' : 'userId')
     ..aI(4, _omitFieldNames ? '' : 'round')
-    ..aE<VoteAction>(5, _omitFieldNames ? '' : 'action',
-        enumValues: VoteAction.values)
+    ..aOB(5, _omitFieldNames ? '' : 'vetoed')
     ..aOS(6, _omitFieldNames ? '' : 'comment')
-    ..aOM<$0.Timestamp>(7, _omitFieldNames ? '' : 'createdAt',
+    ..aOM<$0.Timestamp>(7, _omitFieldNames ? '' : 'updatedAt',
         subBuilder: $0.Timestamp.create)
     ..hasRequiredFields = false;
 
@@ -528,13 +531,13 @@ class Vote extends $pb.GeneratedMessage {
   void clearRound() => $_clearField(4);
 
   @$pb.TagNumber(5)
-  VoteAction get action => $_getN(4);
+  $core.bool get vetoed => $_getBF(4);
   @$pb.TagNumber(5)
-  set action(VoteAction value) => $_setField(5, value);
+  set vetoed($core.bool value) => $_setBool(4, value);
   @$pb.TagNumber(5)
-  $core.bool hasAction() => $_has(4);
+  $core.bool hasVetoed() => $_has(4);
   @$pb.TagNumber(5)
-  void clearAction() => $_clearField(5);
+  void clearVetoed() => $_clearField(5);
 
   @$pb.TagNumber(6)
   $core.String get comment => $_getSZ(5);
@@ -546,15 +549,119 @@ class Vote extends $pb.GeneratedMessage {
   void clearComment() => $_clearField(6);
 
   @$pb.TagNumber(7)
-  $0.Timestamp get createdAt => $_getN(6);
+  $0.Timestamp get updatedAt => $_getN(6);
   @$pb.TagNumber(7)
-  set createdAt($0.Timestamp value) => $_setField(7, value);
+  set updatedAt($0.Timestamp value) => $_setField(7, value);
   @$pb.TagNumber(7)
-  $core.bool hasCreatedAt() => $_has(6);
+  $core.bool hasUpdatedAt() => $_has(6);
   @$pb.TagNumber(7)
-  void clearCreatedAt() => $_clearField(7);
+  void clearUpdatedAt() => $_clearField(7);
   @$pb.TagNumber(7)
-  $0.Timestamp ensureCreatedAt() => $_ensure(6);
+  $0.Timestamp ensureUpdatedAt() => $_ensure(6);
+}
+
+/// A single participant's vote, denormalized with display_name for reveal payloads
+/// (RoundResolved, WinnerRevealed, GetVetoTrail) where the client has no other way to resolve it.
+class RevealedVote extends $pb.GeneratedMessage {
+  factory RevealedVote({
+    $core.String? ideaId,
+    $core.String? userId,
+    $core.String? displayName,
+    $core.bool? vetoed,
+    $core.String? comment,
+  }) {
+    final result = create();
+    if (ideaId != null) result.ideaId = ideaId;
+    if (userId != null) result.userId = userId;
+    if (displayName != null) result.displayName = displayName;
+    if (vetoed != null) result.vetoed = vetoed;
+    if (comment != null) result.comment = comment;
+    return result;
+  }
+
+  RevealedVote._();
+
+  factory RevealedVote.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory RevealedVote.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RevealedVote',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'veto.v1'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'ideaId')
+    ..aOS(2, _omitFieldNames ? '' : 'userId')
+    ..aOS(3, _omitFieldNames ? '' : 'displayName')
+    ..aOB(4, _omitFieldNames ? '' : 'vetoed')
+    ..aOS(5, _omitFieldNames ? '' : 'comment')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RevealedVote clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RevealedVote copyWith(void Function(RevealedVote) updates) =>
+      super.copyWith((message) => updates(message as RevealedVote))
+          as RevealedVote;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static RevealedVote create() => RevealedVote._();
+  @$core.override
+  RevealedVote createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static RevealedVote getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RevealedVote>(create);
+  static RevealedVote? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get ideaId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set ideaId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasIdeaId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearIdeaId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get userId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set userId($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasUserId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearUserId() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get displayName => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set displayName($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasDisplayName() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearDisplayName() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.bool get vetoed => $_getBF(3);
+  @$pb.TagNumber(4)
+  set vetoed($core.bool value) => $_setBool(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasVetoed() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearVetoed() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.String get comment => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set comment($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasComment() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearComment() => $_clearField(5);
 }
 
 class Session extends $pb.GeneratedMessage {
@@ -565,6 +672,9 @@ class Session extends $pb.GeneratedMessage {
     $core.String? hostId,
     SessionPhase? phase,
     $core.int? currentRound,
+    VetoStrategy? vetoStrategy,
+    Tempo? tempo,
+    $core.int? targetRoundCount,
     $0.Timestamp? createdAt,
     $0.Timestamp? completedAt,
   }) {
@@ -575,6 +685,9 @@ class Session extends $pb.GeneratedMessage {
     if (hostId != null) result.hostId = hostId;
     if (phase != null) result.phase = phase;
     if (currentRound != null) result.currentRound = currentRound;
+    if (vetoStrategy != null) result.vetoStrategy = vetoStrategy;
+    if (tempo != null) result.tempo = tempo;
+    if (targetRoundCount != null) result.targetRoundCount = targetRoundCount;
     if (createdAt != null) result.createdAt = createdAt;
     if (completedAt != null) result.completedAt = completedAt;
     return result;
@@ -600,9 +713,13 @@ class Session extends $pb.GeneratedMessage {
     ..aE<SessionPhase>(5, _omitFieldNames ? '' : 'phase',
         enumValues: SessionPhase.values)
     ..aI(6, _omitFieldNames ? '' : 'currentRound')
-    ..aOM<$0.Timestamp>(7, _omitFieldNames ? '' : 'createdAt',
+    ..aE<VetoStrategy>(7, _omitFieldNames ? '' : 'vetoStrategy',
+        enumValues: VetoStrategy.values)
+    ..aE<Tempo>(8, _omitFieldNames ? '' : 'tempo', enumValues: Tempo.values)
+    ..aI(9, _omitFieldNames ? '' : 'targetRoundCount')
+    ..aOM<$0.Timestamp>(10, _omitFieldNames ? '' : 'createdAt',
         subBuilder: $0.Timestamp.create)
-    ..aOM<$0.Timestamp>(8, _omitFieldNames ? '' : 'completedAt',
+    ..aOM<$0.Timestamp>(11, _omitFieldNames ? '' : 'completedAt',
         subBuilder: $0.Timestamp.create)
     ..hasRequiredFields = false;
 
@@ -679,26 +796,53 @@ class Session extends $pb.GeneratedMessage {
   void clearCurrentRound() => $_clearField(6);
 
   @$pb.TagNumber(7)
-  $0.Timestamp get createdAt => $_getN(6);
+  VetoStrategy get vetoStrategy => $_getN(6);
   @$pb.TagNumber(7)
-  set createdAt($0.Timestamp value) => $_setField(7, value);
+  set vetoStrategy(VetoStrategy value) => $_setField(7, value);
   @$pb.TagNumber(7)
-  $core.bool hasCreatedAt() => $_has(6);
+  $core.bool hasVetoStrategy() => $_has(6);
   @$pb.TagNumber(7)
-  void clearCreatedAt() => $_clearField(7);
-  @$pb.TagNumber(7)
-  $0.Timestamp ensureCreatedAt() => $_ensure(6);
+  void clearVetoStrategy() => $_clearField(7);
 
   @$pb.TagNumber(8)
-  $0.Timestamp get completedAt => $_getN(7);
+  Tempo get tempo => $_getN(7);
   @$pb.TagNumber(8)
-  set completedAt($0.Timestamp value) => $_setField(8, value);
+  set tempo(Tempo value) => $_setField(8, value);
   @$pb.TagNumber(8)
-  $core.bool hasCompletedAt() => $_has(7);
+  $core.bool hasTempo() => $_has(7);
   @$pb.TagNumber(8)
-  void clearCompletedAt() => $_clearField(8);
-  @$pb.TagNumber(8)
-  $0.Timestamp ensureCompletedAt() => $_ensure(7);
+  void clearTempo() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $core.int get targetRoundCount => $_getIZ(8);
+  @$pb.TagNumber(9)
+  set targetRoundCount($core.int value) => $_setSignedInt32(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasTargetRoundCount() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearTargetRoundCount() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  $0.Timestamp get createdAt => $_getN(9);
+  @$pb.TagNumber(10)
+  set createdAt($0.Timestamp value) => $_setField(10, value);
+  @$pb.TagNumber(10)
+  $core.bool hasCreatedAt() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearCreatedAt() => $_clearField(10);
+  @$pb.TagNumber(10)
+  $0.Timestamp ensureCreatedAt() => $_ensure(9);
+
+  @$pb.TagNumber(11)
+  $0.Timestamp get completedAt => $_getN(10);
+  @$pb.TagNumber(11)
+  set completedAt($0.Timestamp value) => $_setField(11, value);
+  @$pb.TagNumber(11)
+  $core.bool hasCompletedAt() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearCompletedAt() => $_clearField(11);
+  @$pb.TagNumber(11)
+  $0.Timestamp ensureCompletedAt() => $_ensure(10);
 }
 
 class SessionDetail extends $pb.GeneratedMessage {

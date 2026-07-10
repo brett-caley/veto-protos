@@ -5,6 +5,10 @@ modules:
 lint:
   use:
     - STANDARD
+  except:
+    # StreamEvents intentionally returns SessionEvent, not StreamEventsResponse — see
+    # GRPC_STYLEGUIDE.md's own Server Streaming example and API_CONTRACT.md.
+    - RPC_RESPONSE_STANDARD_NAME
 breaking:
   use:
     - FILE

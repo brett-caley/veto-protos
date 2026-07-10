@@ -1,0 +1,103 @@
+syntax = "proto3";
+
+package veto.v1;
+
+option go_package = "github.com/brett-caley/veto-protos/gen/go/veto/v1;vetov1";
+
+import "google/protobuf/timestamp.proto";
+import "veto/v1/common.proto";
+
+service SessionService {
+  rpc CreateSession(CreateSessionRequest) returns (CreateSessionResponse);
+  rpc GetSession(GetSessionRequest) returns (GetSessionResponse);
+  rpc JoinSession(JoinSessionRequest) returns (JoinSessionResponse);
+  rpc StartVoting(StartVotingRequest) returns (StartVotingResponse);
+  rpc ListSessions(ListSessionsRequest) returns (ListSessionsResponse);
+}
+
+message CreateSessionRequest {
+  // Required. 1-100 characters.
+  string title = 1;
+  // Required. Only VETO_STRATEGY_RAW is implemented for MVP.
+  VetoStrategy veto_strategy = 2;
+  // Required.
+  Tempo tempo = 3;
+  // Optional. Defaults to 3 when unset. Must be >= 1.
+  optional int32 target_round_count = 4;
+}
+
+message CreateSessionResponse {
+  Session session = 1;
+}
+
+message GetSessionRequest {
+  string code = 1;
+}
+
+message GetSessionResponse {
+  SessionDetail session = 1;
+}
+
+message JoinSessionRequest {
+  string code = 1;
+}
+
+message JoinSessionResponse {
+  string session_id = 1;
+  string user_id = 2;
+  google.protobuf.Timestamp joined_at = 3;
+}
+
+message StartVotingRequest {
+  string code = 1;
+}
+
+message StartVotingResponse {
+  Session session = 1;
+  int32 ideas_count = 2;
+  int32 participants_count = 3;
+}
+
+message ListSessionsRequest {
+  int32 page_size = 1; // max 50, default 20
+  string page_token = 2; // empty for first page
+  optional string status_filter = 3; // "active" (lobby + voting) | "completed"
+}
+
+message SessionSummary {
+  Session session = 1;
+  int32 participants_count = 2;
+  int32 ideas_count = 3;
+}
+
+message ListSessionsResponse {
+  repeated SessionSummary sessions = 1;
+  string next_page_token = 2; // empty when no more pages
+}
+
+service IdeaService {
+  rpc SubmitIdea(SubmitIdeaRequest) returns (SubmitIdeaResponse);
+  rpc RemoveIdea(RemoveIdeaRequest) returns (RemoveIdeaResponse);
+}
+
+// Submit an idea to a session. Lobby-phase only, so anonymity rules (which only apply during
+// voting) don't affect this RPC or its IdeaSubmitted event.
+message SubmitIdeaRequest {
+  string code = 1;
+  // Required. 1-200 characters.
+  string text = 2;
+  // Optional. Valid URL or omit.
+  optional string image_url = 3;
+}
+
+message SubmitIdeaResponse {
+  Idea idea = 1;
+}
+
+// Remove an idea. Only the submitter can remove their own idea, and only during the lobby phase.
+message RemoveIdeaRequest {
+  string code = 1;
+  string idea_id = 2;
+}
+
+message RemoveIdeaResponse {}

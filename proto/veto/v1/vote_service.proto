@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+package veto.v1;
+
+option go_package = "github.com/brett-caley/veto-protos/gen/go/veto/v1;vetov1";
+
+import "veto/v1/common.proto";
+
+// Implements the lock/unlock round lifecycle from VETO_MECHANICS.md §3 — every round is a
+// ready-room: participants freely toggle vetoes, lock in when ready, and can unlock to revise
+// until the round resolves.
+service VoteService {
+  rpc CastVote(CastVoteRequest) returns (CastVoteResponse);
+  rpc LockRoundSubmission(LockRoundSubmissionRequest) returns (LockRoundSubmissionResponse);
+  rpc UnlockRoundSubmission(UnlockRoundSubmissionRequest) returns (UnlockRoundSubmissionResponse);
+  rpc ForceAdvanceRound(ForceAdvanceRoundRequest) returns (ForceAdvanceRoundResponse);
+}
+
+// Set veto state on an active idea for the current round. Idempotent set, not a flip — the
+// client sends the desired resulting state, not "toggle." Does not broadcast the individual
+// choice to other participants — nobody sees anyone's choices, including whether an idea has
+// been vetoed at all, until the round resolves. Only the aggregate lock count changes are
+// visible mid-round (see RoundLockProgress).
+message CastVoteRequest {
+  string code = 1;
+  // Required. Must be an active (non-eliminated) idea in this session.
+  string idea_id = 2;
+  // Required. Desired state: true to veto, false to un-veto (revert to implicit keep).
+  bool vetoed = 3;
+  // Optional. 0-500 characters. Only meaningful when vetoed = true.
+  optional string comment = 4;
+}
+
+message CastVoteResponse {
+  Vote vote = 1;
+}
+
+// Lock in the caller's current veto choices for this round. If this lock brings locked_count to
+// participants_count, the round resolves immediately — the same resolution path as timer expiry
+// or force-advance.
+message LockRoundSubmissionRequest {
+  string code = 1;
+}
+
+message LockRoundSubmissionResponse {
+  int32 round = 1;
+  int32 locked_count = 2;
+  int32 participants_count = 3;
+}
+
+// Revert the caller's lock so they can revise their veto choices, then re-lock.
+message UnlockRoundSubmissionRequest {
+  string code = 1;
+}
+
+message UnlockRoundSubmissionResponse {
+  int32 round = 1;
+  int32 locked_count = 2;
+  int32 participants_count = 3;
+}
+
+// Host resolves the current round immediately, treating any still-unlocked participant as
+// contributing a zero score. Only available under TEMPO_ONGOING — see VETO_MECHANICS.md §6.
+message ForceAdvanceRoundRequest {
+  string code = 1;
+}
+
+message ForceAdvanceRoundResponse {
+  Session session = 1;
+}

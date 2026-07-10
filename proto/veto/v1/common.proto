@@ -27,24 +27,38 @@ message SubmittedBy {
   string display_name = 2;
 }
 
+// Unset while session.phase == SESSION_PHASE_VOTING (anonymity during the elimination round —
+// see VETO_MECHANICS.md §2). Present in SESSION_PHASE_LOBBY (The Board) and SESSION_PHASE_COMPLETE.
 message Idea {
   string id = 1;
   string session_id = 2;
   string text = 3;
   optional string image_url = 4;
-  SubmittedBy submitted_by = 5;
+  optional SubmittedBy submitted_by = 5;
   optional int32 eliminated_in_round = 6;
   google.protobuf.Timestamp created_at = 7;
 }
 
+// A participant's veto state on one idea for one round. Presence of vetoed=true is the only
+// signal — there is no explicit "keep" action (see VETO_MECHANICS.md §5, Raw Veto).
 message Vote {
   string session_id = 1;
   string idea_id = 2;
   string user_id = 3;
   int32 round = 4;
-  VoteAction action = 5;
+  bool vetoed = 5;
   optional string comment = 6;
-  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 7;
+}
+
+// A single participant's vote, denormalized with display_name for reveal payloads
+// (RoundResolved, WinnerRevealed, GetVetoTrail) where the client has no other way to resolve it.
+message RevealedVote {
+  string idea_id = 1;
+  string user_id = 2;
+  string display_name = 3;
+  bool vetoed = 4;
+  optional string comment = 5;
 }
 
 message Session {
@@ -54,8 +68,11 @@ message Session {
   string host_id = 4;
   SessionPhase phase = 5;
   int32 current_round = 6;
-  google.protobuf.Timestamp created_at = 7;
-  optional google.protobuf.Timestamp completed_at = 8;
+  VetoStrategy veto_strategy = 7;
+  Tempo tempo = 8;
+  int32 target_round_count = 9;
+  google.protobuf.Timestamp created_at = 10;
+  optional google.protobuf.Timestamp completed_at = 11;
 }
 
 message SessionDetail {
@@ -71,8 +88,17 @@ enum SessionPhase {
   SESSION_PHASE_COMPLETE = 3;
 }
 
-enum VoteAction {
-  VOTE_ACTION_UNSPECIFIED = 0;
-  VOTE_ACTION_VETO = 1;
-  VOTE_ACTION_KEEP = 2;
+enum VetoStrategy {
+  VETO_STRATEGY_UNSPECIFIED = 0;
+  VETO_STRATEGY_RAW = 1;
+  // Reserved. Not implemented for MVP — CreateSession rejects it. See VETO_MECHANICS.md open questions.
+  VETO_STRATEGY_TOKEN = 2;
+}
+
+enum Tempo {
+  TEMPO_UNSPECIFIED = 0;
+  // Short round timer, no force-advance — round waits out the timer. See VETO_MECHANICS.md §6.
+  TEMPO_QUICK_DECISION = 1;
+  // Long/no round timer, host can ForceAdvanceRound. See VETO_MECHANICS.md §6.
+  TEMPO_ONGOING = 2;
 }
