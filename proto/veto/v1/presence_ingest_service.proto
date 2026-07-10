@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package veto.v1;
+
+option go_package = "github.com/brett-caley/veto-protos/gen/go/veto/v1;vetov1";
+
+import "veto/v1/presence_service.proto";
+
+// Internal, service-to-service only — not part of the client-facing API_CONTRACT.md surface.
+// SessionService (and future mutation services) call this to push a SessionEvent to the
+// Presence & Real-Time Service, which fans it out to StreamEvents subscribers for the session.
+// Routed sidecar-to-sidecar (SERVICE_ARCHITECTURE.md §4.1), never exposed on the Envoy edge proxy.
+service PresenceIngestService {
+  rpc PublishEvent(PublishEventRequest) returns (PublishEventResponse);
+}
+
+message PublishEventRequest {
+  string code = 1;
+  SessionEvent event = 2;
+}
+
+message PublishEventResponse {}
