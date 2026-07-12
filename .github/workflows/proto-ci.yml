@@ -14,17 +14,18 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # PR gate: lint, breaking-change detection, and a drift check that fails if the
-  # committed stubs don't match a fresh `buf generate`. Read-only — never commits.
+  # PR gate. Proves the protos lint, don't break compatibility, and generate +
+  # compile cleanly — WITHOUT requiring gen/ to be committed. Generated code is a
+  # main-branch artifact produced by the regenerate job below, so a PR that edits
+  # only .proto files (no gen/) is expected and passes. Read-only — never commits.
   verify:
-    name: lint + breaking + drift check
+    name: lint + breaking + codegen check
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     env:
       # protoc-gen-dart ships in the `protoc_plugin` pub package. 25.x pairs with
-      # protobuf ^6.0.0 — matching veto-flutter's runtime pin and the committed
-      # gen/dart baseline (older majors target protobuf 3.x/4.x/5.x and won't
-      # compile against the current runtime). Pinned so generation is deterministic.
+      # protobuf ^6.0.0 — matching veto-flutter's runtime pin (older majors target
+      # protobuf 3.x/4.x/5.x and won't run against the current Dart runtime).
       PROTOC_PLUGIN_VERSION: "25.0.0"
       PUB_CACHE: ${{ github.workspace }}/.pub-cache
     steps:
@@ -32,10 +33,10 @@ jobs:
         with:
           fetch-depth: 0 # buf breaking needs the base branch history
 
-      # The repo's committed Hermit shims (bin/buf, bin/go, bin/dart -> flutter)
-      # pin the toolchain versions. Prepending bin/ to PATH makes the first call
-      # to each tool bootstrap Hermit and install that pinned version — no
-      # third-party setup actions needed.
+      # The repo's committed Hermit shims (bin/buf, bin/go, bin/dart) pin the
+      # toolchain versions. Prepending bin/ to PATH makes the first call to each
+      # tool bootstrap Hermit and install that pinned version — no third-party
+      # setup actions. dart is a standalone SDK pinned via bin/hermit-packages/dart.hcl.
       - name: Activate Hermit toolchain
         run: echo "${{ github.workspace }}/bin" >> "$GITHUB_PATH"
 
@@ -58,22 +59,21 @@ jobs:
           dart pub global activate protoc_plugin "$PROTOC_PLUGIN_VERSION"
           echo "$PUB_CACHE/bin" >> "$GITHUB_PATH"
 
-      - name: buf generate (go + dart)
+      # Generate to verify the protos compile cleanly (Go + Dart), then throw the
+      # output away — we do NOT diff or require it committed. Succeeding here proves
+      # the regenerate-on-main step will succeed, so a .proto-only merge can't leave
+      # main broken.
+      - name: buf generate (verify codegen succeeds)
         run: buf generate
 
       - name: Verify generated Go compiles
         run: go build ./...
 
-      - name: Fail if committed stubs are stale
-        run: |
-          if ! git diff --exit-code -- gen/; then
-            echo "::error::gen/ is out of date. Run 'buf generate' and commit the result (or merge to let CI regenerate)."
-            exit 1
-          fi
-
-  # main safety net: regenerate Go + Dart and commit any drift back to main.
-  # A GITHUB_TOKEN-authored push does not re-trigger workflows, so there is no
-  # loop; we also only commit when gen/ actually changed.
+  # main: the single place proto stubs are compiled and committed. On every push to
+  # main (i.e. a merge), regenerate Go + Dart and commit any changes back — so the
+  # compiled stubs "fall out" on merge and authors never need the toolchain locally.
+  # A GITHUB_TOKEN-authored push does not re-trigger workflows, so there is no loop;
+  # we also only commit when gen/ actually changed.
   regenerate:
     name: regenerate (go + dart) + commit
     if: github.event_name == 'push'
