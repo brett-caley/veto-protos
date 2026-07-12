@@ -29,7 +29,9 @@ git checkout -- bin/
 
 ### Hermit (Toolchain Manager)
 
-This repo uses [Hermit](https://github.com/cashapp/hermit) to pin the exact version of `buf`. No global installs needed — Hermit downloads and manages everything locally per repo.
+This repo uses [Hermit](https://github.com/cashapp/hermit) to pin the exact versions of its tools (`buf`, `go`, and a standalone `dart` SDK). No global installs needed — Hermit downloads and manages everything locally per repo.
+
+> The `dart` SDK is pinned via a **repo-local manifest** at [`bin/hermit-packages/dart.hcl`](bin/hermit-packages/dart.hcl), registered as a source in `bin/hermit.hcl`. Upstream Hermit's `dart` package lags the version `protoc-gen-dart` needs, and we only need `dart` (never Flutter), so we pin a standalone SDK ourselves. This is self-contained — no upstream Hermit contribution required.
 
 **Install Hermit** (once per machine):
 
@@ -62,10 +64,66 @@ If this doesn't resolve, make sure `hermit shell-hooks` is configured (see above
 
 ## Workflow
 
-- `.proto` files define the shared API contract between the Go backend and Flutter client.
-- Run `buf lint` before committing proto changes.
-- Run `buf breaking --against .git#branch=main` to check for breaking changes.
-- Do not hand-edit any generated code in downstream repos (`veto/gen/`, `veto-flutter/lib/gen/`).
+`.proto` files define the shared API contract between the Go backend and Flutter
+client. **Generated code (`gen/go`, `gen/dart`) is a build artifact of `main`, not
+something you hand-maintain.** You edit and commit **only `.proto` files**; CI
+compiles the stubs when your change lands on `main`.
+
+### Making a proto change
+
+1. Branch from `main`.
+2. Edit the `.proto` file(s) under `proto/veto/v1/`.
+3. Open a PR with **just the `.proto` change** — you do **not** need to commit `gen/`.
+4. Merge. On merge, CI regenerates `gen/go` + `gen/dart` and commits them to `main`.
+
+That's it — you never need the Dart toolchain, and there's no generated code to
+keep in sync by hand.
+
+### What CI checks (the safety gate)
+
+On every PR, the `verify` job proves the change is safe **without** requiring
+committed stubs:
+
+- `buf lint` — proto style/correctness.
+- `buf breaking` against `main` — backwards-compatibility.
+- `buf generate` (Go **and** Dart) — proves the protos actually compile with the
+  pinned plugins (output is discarded, not diffed).
+- `go build ./...` — proves the generated Go compiles.
+
+Passing these guarantees the `regenerate`-on-`main` step will succeed, so a
+`.proto`-only merge can't leave `main` broken. **Do not merge a red PR** — a
+failing `verify` means the proto itself won't compile, which would break `main`.
+
+### Generating locally (optional)
+
+If you have the pinned toolchain (Hermit provides `buf`, `go`, and `dart`), you can
+generate stubs yourself to inspect the output:
+
+```bash
+dart pub global activate protoc_plugin 25.0.0   # first time; puts protoc-gen-dart on PATH
+buf generate                                    # writes gen/go + gen/dart
+```
+
+You may commit the result if you like — CI will just no-op on `main`. But it's
+never required.
+
+### Toolchain / plugin pins
+
+Generation is deterministic because everything is pinned. **Don't bump these
+casually** — a bump means regenerating everything and re-verifying downstream:
+
+- Go plugins: `buf.gen.yaml` (`protoc-gen-go`, `protoc-gen-go-grpc`).
+- Dart plugin: `protoc_plugin` in `.github/workflows/proto-ci.yml`.
+- `dart` SDK: `bin/hermit-packages/dart.hcl` (must stay `>= protoc_plugin`'s required Dart, currently `^3.7`).
+
+### Downstream
+
+A proto change isn't fully "done" at merge — downstream consumers still need a bump:
+
+- The **veto backend** pins a `veto-protos` pseudo-version in `go.mod`.
+- **veto-flutter** carries its own copy of the generated Dart.
+
+Do not hand-edit generated code in downstream repos (`veto/gen/`, `veto-flutter/lib/gen/`).
 
 ## Branching and PRs
 
