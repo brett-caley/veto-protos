@@ -116,11 +116,35 @@ casually** — a bump means regenerating everything and re-verifying downstream:
 - Dart plugin: `protoc_plugin` in `.github/workflows/proto-ci.yml`.
 - `dart` SDK: `bin/hermit-packages/dart.hcl` (must stay `>= protoc_plugin`'s required Dart, currently `^3.7`).
 
+### Releases (automatic)
+
+When a merge to `main` changes the generated Go, CI **cuts a semver git tag**
+automatically (see the `regenerate` job + [`scripts/next-version.sh`](scripts/next-version.sh)),
+so downstream can `go get github.com/brett-caley/veto-protos@vX.Y.Z` instead of
+chasing commit pseudo-versions. No GitHub Release object is created — the tag is
+all `go get` needs.
+
+The version is derived from the [Conventional Commits](https://www.conventionalcommits.org/)
+on the change (highest precedence wins):
+
+| Commit | Bump |
+|---|---|
+| `feat: …` | minor |
+| `fix:` / `chore:` / `docs:` / anything else | patch |
+| `type!: …` or `BREAKING CHANGE:` in the body | major once `>= v1.0.0`; **minor while `v0.x`** |
+
+We stay on **`v0.x`** while the contract is still evolving — under `v0`, breaking
+changes are minor bumps, which avoids Go's `v2+` module-path migration (the import
+path only gains a `/vN` suffix at major versions `>= 2`). Cut `v1.0.0` deliberately
+(by hand, or by bumping `INITIAL_VERSION` after tagging it) once the API is stable.
+
+`scripts/next-version.sh` is unit-tested — run `bash scripts/next-version_test.sh`.
+
 ### Downstream
 
 A proto change isn't fully "done" at merge — downstream consumers still need a bump:
 
-- The **veto backend** pins a `veto-protos` pseudo-version in `go.mod`.
+- The **veto backend** bumps its `veto-protos` version in `go.mod` (`go get …@vX.Y.Z`).
 - **veto-flutter** carries its own copy of the generated Dart.
 
 Do not hand-edit generated code in downstream repos (`veto/gen/`, `veto-flutter/lib/gen/`).

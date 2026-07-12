@@ -85,6 +85,8 @@ jobs:
       PUB_CACHE: ${{ github.workspace }}/.pub-cache
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # need full history + tags for release tagging
 
       - name: Activate Hermit toolchain
         run: echo "${{ github.workspace }}/bin" >> "$GITHUB_PATH"
@@ -120,3 +122,22 @@ jobs:
           git add gen/
           git commit -m "chore: regenerate proto stubs [skip ci]"
           git push origin HEAD:${{ github.ref_name }}
+
+      # Cut a semver tag so downstream (the veto backend) can `go get
+      # veto-protos@vX.Y.Z` instead of chasing pseudo-versions. Only release when
+      # the generated Go actually changed since the last tag (or there is no tag
+      # yet). Version is derived from conventional-commit messages — see
+      # scripts/next-version.sh. GITHUB_TOKEN tag pushes don't re-trigger CI.
+      - name: Tag release if generated code changed
+        run: |
+          latest="$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n1 || true)"
+          if [ -n "$latest" ] && git diff --quiet "$latest" HEAD -- gen/go; then
+            echo "gen/go unchanged since $latest — no release."
+            exit 0
+          fi
+          next="$(bash scripts/next-version.sh)"
+          echo "Tagging release $next (previous: ${latest:-none})"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$next" -m "Release $next"
+          git push origin "$next"
