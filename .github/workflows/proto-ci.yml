@@ -21,10 +21,11 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     env:
-      # protoc-gen-dart ships in the `protoc_plugin` pub package (22.x line — the
-      # committed gen/dart uses its bundled well-known-types + generic extensions).
-      # Pinned so generation is deterministic; must match the committed baseline.
-      PROTOC_PLUGIN_VERSION: "22.0.0"
+      # protoc-gen-dart ships in the `protoc_plugin` pub package. 25.x pairs with
+      # protobuf ^6.0.0 — matching veto-flutter's runtime pin and the committed
+      # gen/dart baseline (older majors target protobuf 3.x/4.x/5.x and won't
+      # compile against the current runtime). Pinned so generation is deterministic.
+      PROTOC_PLUGIN_VERSION: "25.0.0"
       PUB_CACHE: ${{ github.workspace }}/.pub-cache
     steps:
       - uses: actions/checkout@v4
@@ -80,7 +81,7 @@ jobs:
     permissions:
       contents: write
     env:
-      PROTOC_PLUGIN_VERSION: "22.0.0"
+      PROTOC_PLUGIN_VERSION: "25.0.0" # pairs with protobuf ^6.0.0 — see verify job note
       PUB_CACHE: ${{ github.workspace }}/.pub-cache
     steps:
       - uses: actions/checkout@v4
