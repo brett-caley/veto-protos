@@ -45,9 +45,20 @@ const CreateSessionRequest$json = {
       '10': 'targetRoundCount',
       '17': true
     },
+    {
+      '1': 'visibility',
+      '3': 5,
+      '4': 1,
+      '5': 14,
+      '6': '.veto.v1.Visibility',
+      '9': 1,
+      '10': 'visibility',
+      '17': true
+    },
   ],
   '8': [
     {'1': '_target_round_count'},
+    {'1': '_visibility'},
   ],
 };
 
@@ -56,7 +67,9 @@ final $typed_data.Uint8List createSessionRequestDescriptor = $convert.base64Deco
     'ChRDcmVhdGVTZXNzaW9uUmVxdWVzdBIUCgV0aXRsZRgBIAEoCVIFdGl0bGUSOgoNdmV0b19zdH'
     'JhdGVneRgCIAEoDjIVLnZldG8udjEuVmV0b1N0cmF0ZWd5Ugx2ZXRvU3RyYXRlZ3kSJAoFdGVt'
     'cG8YAyABKA4yDi52ZXRvLnYxLlRlbXBvUgV0ZW1wbxIxChJ0YXJnZXRfcm91bmRfY291bnQYBC'
-    'ABKAVIAFIQdGFyZ2V0Um91bmRDb3VudIgBAUIVChNfdGFyZ2V0X3JvdW5kX2NvdW50');
+    'ABKAVIAFIQdGFyZ2V0Um91bmRDb3VudIgBARI4Cgp2aXNpYmlsaXR5GAUgASgOMhMudmV0by52'
+    'MS5WaXNpYmlsaXR5SAFSCnZpc2liaWxpdHmIAQFCFQoTX3RhcmdldF9yb3VuZF9jb3VudEINCg'
+    'tfdmlzaWJpbGl0eQ==');
 
 @$core.Deprecated('Use createSessionResponseDescriptor instead')
 const CreateSessionResponse$json = {
