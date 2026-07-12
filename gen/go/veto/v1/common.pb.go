@@ -175,6 +175,58 @@ func (Tempo) EnumDescriptor() ([]byte, []int) {
 	return file_veto_v1_common_proto_rawDescGZIP(), []int{2}
 }
 
+// Who can join a session. MVP honors only VISIBILITY_INVITE_ONLY (join by code).
+// VISIBILITY_PUBLIC ("anyone nearby") is reserved for a future geo/presence-backed
+// phase — CreateSession rejects it for now. See PLAN-00 reconciliation #2.
+type Visibility int32
+
+const (
+	Visibility_VISIBILITY_UNSPECIFIED Visibility = 0
+	Visibility_VISIBILITY_INVITE_ONLY Visibility = 1
+	Visibility_VISIBILITY_PUBLIC      Visibility = 2 // reserved, not honored in MVP
+)
+
+// Enum value maps for Visibility.
+var (
+	Visibility_name = map[int32]string{
+		0: "VISIBILITY_UNSPECIFIED",
+		1: "VISIBILITY_INVITE_ONLY",
+		2: "VISIBILITY_PUBLIC",
+	}
+	Visibility_value = map[string]int32{
+		"VISIBILITY_UNSPECIFIED": 0,
+		"VISIBILITY_INVITE_ONLY": 1,
+		"VISIBILITY_PUBLIC":      2,
+	}
+)
+
+func (x Visibility) Enum() *Visibility {
+	p := new(Visibility)
+	*p = x
+	return p
+}
+
+func (x Visibility) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (Visibility) Descriptor() protoreflect.EnumDescriptor {
+	return file_veto_v1_common_proto_enumTypes[3].Descriptor()
+}
+
+func (Visibility) Type() protoreflect.EnumType {
+	return &file_veto_v1_common_proto_enumTypes[3]
+}
+
+func (x Visibility) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use Visibility.Descriptor instead.
+func (Visibility) EnumDescriptor() ([]byte, []int) {
+	return file_veto_v1_common_proto_rawDescGZIP(), []int{3}
+}
+
 type User struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -658,6 +710,7 @@ type Session struct {
 	TargetRoundCount int32                  `protobuf:"varint,9,opt,name=target_round_count,json=targetRoundCount,proto3" json:"target_round_count,omitempty"`
 	CreatedAt        *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	CompletedAt      *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=completed_at,json=completedAt,proto3,oneof" json:"completed_at,omitempty"`
+	Visibility       Visibility             `protobuf:"varint,12,opt,name=visibility,proto3,enum=veto.v1.Visibility" json:"visibility,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
@@ -767,6 +820,13 @@ func (x *Session) GetCompletedAt() *timestamppb.Timestamp {
 		return x.CompletedAt
 	}
 	return nil
+}
+
+func (x *Session) GetVisibility() Visibility {
+	if x != nil {
+		return x.Visibility
+	}
+	return Visibility_VISIBILITY_UNSPECIFIED
 }
 
 type SessionDetail struct {
@@ -887,7 +947,7 @@ const file_veto_v1_common_proto_rawDesc = "" +
 	"\x06vetoed\x18\x04 \x01(\bR\x06vetoed\x12\x1d\n" +
 	"\acomment\x18\x05 \x01(\tH\x00R\acomment\x88\x01\x01B\n" +
 	"\n" +
-	"\b_comment\"\xce\x03\n" +
+	"\b_comment\"\x83\x04\n" +
 	"\aSession\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04code\x18\x02 \x01(\tR\x04code\x12\x14\n" +
@@ -901,7 +961,10 @@ const file_veto_v1_common_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\n" +
 	" \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12B\n" +
-	"\fcompleted_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampH\x00R\vcompletedAt\x88\x01\x01B\x0f\n" +
+	"\fcompleted_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampH\x00R\vcompletedAt\x88\x01\x01\x123\n" +
+	"\n" +
+	"visibility\x18\f \x01(\x0e2\x13.veto.v1.VisibilityR\n" +
+	"visibilityB\x0f\n" +
 	"\r_completed_at\"\x9a\x01\n" +
 	"\rSessionDetail\x12*\n" +
 	"\asession\x18\x01 \x01(\v2\x10.veto.v1.SessionR\asession\x128\n" +
@@ -919,7 +982,12 @@ const file_veto_v1_common_proto_rawDesc = "" +
 	"\x05Tempo\x12\x15\n" +
 	"\x11TEMPO_UNSPECIFIED\x10\x00\x12\x18\n" +
 	"\x14TEMPO_QUICK_DECISION\x10\x01\x12\x11\n" +
-	"\rTEMPO_ONGOING\x10\x02B:Z8github.com/brett-caley/veto-protos/gen/go/veto/v1;vetov1b\x06proto3"
+	"\rTEMPO_ONGOING\x10\x02*[\n" +
+	"\n" +
+	"Visibility\x12\x1a\n" +
+	"\x16VISIBILITY_UNSPECIFIED\x10\x00\x12\x1a\n" +
+	"\x16VISIBILITY_INVITE_ONLY\x10\x01\x12\x15\n" +
+	"\x11VISIBILITY_PUBLIC\x10\x02B:Z8github.com/brett-caley/veto-protos/gen/go/veto/v1;vetov1b\x06proto3"
 
 var (
 	file_veto_v1_common_proto_rawDescOnce sync.Once
@@ -933,41 +1001,43 @@ func file_veto_v1_common_proto_rawDescGZIP() []byte {
 	return file_veto_v1_common_proto_rawDescData
 }
 
-var file_veto_v1_common_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
+var file_veto_v1_common_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
 var file_veto_v1_common_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_veto_v1_common_proto_goTypes = []any{
 	(SessionPhase)(0),             // 0: veto.v1.SessionPhase
 	(VetoStrategy)(0),             // 1: veto.v1.VetoStrategy
 	(Tempo)(0),                    // 2: veto.v1.Tempo
-	(*User)(nil),                  // 3: veto.v1.User
-	(*Participant)(nil),           // 4: veto.v1.Participant
-	(*SubmittedBy)(nil),           // 5: veto.v1.SubmittedBy
-	(*Idea)(nil),                  // 6: veto.v1.Idea
-	(*Vote)(nil),                  // 7: veto.v1.Vote
-	(*RevealedVote)(nil),          // 8: veto.v1.RevealedVote
-	(*Session)(nil),               // 9: veto.v1.Session
-	(*SessionDetail)(nil),         // 10: veto.v1.SessionDetail
-	(*timestamppb.Timestamp)(nil), // 11: google.protobuf.Timestamp
+	(Visibility)(0),               // 3: veto.v1.Visibility
+	(*User)(nil),                  // 4: veto.v1.User
+	(*Participant)(nil),           // 5: veto.v1.Participant
+	(*SubmittedBy)(nil),           // 6: veto.v1.SubmittedBy
+	(*Idea)(nil),                  // 7: veto.v1.Idea
+	(*Vote)(nil),                  // 8: veto.v1.Vote
+	(*RevealedVote)(nil),          // 9: veto.v1.RevealedVote
+	(*Session)(nil),               // 10: veto.v1.Session
+	(*SessionDetail)(nil),         // 11: veto.v1.SessionDetail
+	(*timestamppb.Timestamp)(nil), // 12: google.protobuf.Timestamp
 }
 var file_veto_v1_common_proto_depIdxs = []int32{
-	11, // 0: veto.v1.User.created_at:type_name -> google.protobuf.Timestamp
-	11, // 1: veto.v1.Participant.joined_at:type_name -> google.protobuf.Timestamp
-	5,  // 2: veto.v1.Idea.submitted_by:type_name -> veto.v1.SubmittedBy
-	11, // 3: veto.v1.Idea.created_at:type_name -> google.protobuf.Timestamp
-	11, // 4: veto.v1.Vote.updated_at:type_name -> google.protobuf.Timestamp
+	12, // 0: veto.v1.User.created_at:type_name -> google.protobuf.Timestamp
+	12, // 1: veto.v1.Participant.joined_at:type_name -> google.protobuf.Timestamp
+	6,  // 2: veto.v1.Idea.submitted_by:type_name -> veto.v1.SubmittedBy
+	12, // 3: veto.v1.Idea.created_at:type_name -> google.protobuf.Timestamp
+	12, // 4: veto.v1.Vote.updated_at:type_name -> google.protobuf.Timestamp
 	0,  // 5: veto.v1.Session.phase:type_name -> veto.v1.SessionPhase
 	1,  // 6: veto.v1.Session.veto_strategy:type_name -> veto.v1.VetoStrategy
 	2,  // 7: veto.v1.Session.tempo:type_name -> veto.v1.Tempo
-	11, // 8: veto.v1.Session.created_at:type_name -> google.protobuf.Timestamp
-	11, // 9: veto.v1.Session.completed_at:type_name -> google.protobuf.Timestamp
-	9,  // 10: veto.v1.SessionDetail.session:type_name -> veto.v1.Session
-	4,  // 11: veto.v1.SessionDetail.participants:type_name -> veto.v1.Participant
-	6,  // 12: veto.v1.SessionDetail.ideas:type_name -> veto.v1.Idea
-	13, // [13:13] is the sub-list for method output_type
-	13, // [13:13] is the sub-list for method input_type
-	13, // [13:13] is the sub-list for extension type_name
-	13, // [13:13] is the sub-list for extension extendee
-	0,  // [0:13] is the sub-list for field type_name
+	12, // 8: veto.v1.Session.created_at:type_name -> google.protobuf.Timestamp
+	12, // 9: veto.v1.Session.completed_at:type_name -> google.protobuf.Timestamp
+	3,  // 10: veto.v1.Session.visibility:type_name -> veto.v1.Visibility
+	10, // 11: veto.v1.SessionDetail.session:type_name -> veto.v1.Session
+	5,  // 12: veto.v1.SessionDetail.participants:type_name -> veto.v1.Participant
+	7,  // 13: veto.v1.SessionDetail.ideas:type_name -> veto.v1.Idea
+	14, // [14:14] is the sub-list for method output_type
+	14, // [14:14] is the sub-list for method input_type
+	14, // [14:14] is the sub-list for extension type_name
+	14, // [14:14] is the sub-list for extension extendee
+	0,  // [0:14] is the sub-list for field type_name
 }
 
 func init() { file_veto_v1_common_proto_init() }
@@ -986,7 +1056,7 @@ func file_veto_v1_common_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_veto_v1_common_proto_rawDesc), len(file_veto_v1_common_proto_rawDesc)),
-			NumEnums:      3,
+			NumEnums:      4,
 			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   0,

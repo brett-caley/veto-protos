@@ -24,6 +24,9 @@ message CreateSessionRequest {
   Tempo tempo = 3;
   // Optional. Defaults to 3 when unset. Must be >= 1.
   optional int32 target_round_count = 4;
+  // Optional. Defaults to VISIBILITY_INVITE_ONLY when unset. MVP rejects
+  // VISIBILITY_PUBLIC with INVALID_ARGUMENT — see PLAN-00 reconciliation #2.
+  optional Visibility visibility = 5;
 }
 
 message CreateSessionResponse {

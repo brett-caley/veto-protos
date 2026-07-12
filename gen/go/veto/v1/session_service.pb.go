@@ -32,8 +32,11 @@ type CreateSessionRequest struct {
 	Tempo Tempo `protobuf:"varint,3,opt,name=tempo,proto3,enum=veto.v1.Tempo" json:"tempo,omitempty"`
 	// Optional. Defaults to 3 when unset. Must be >= 1.
 	TargetRoundCount *int32 `protobuf:"varint,4,opt,name=target_round_count,json=targetRoundCount,proto3,oneof" json:"target_round_count,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	// Optional. Defaults to VISIBILITY_INVITE_ONLY when unset. MVP rejects
+	// VISIBILITY_PUBLIC with INVALID_ARGUMENT — see PLAN-00 reconciliation #2.
+	Visibility    *Visibility `protobuf:"varint,5,opt,name=visibility,proto3,enum=veto.v1.Visibility,oneof" json:"visibility,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *CreateSessionRequest) Reset() {
@@ -92,6 +95,13 @@ func (x *CreateSessionRequest) GetTargetRoundCount() int32 {
 		return *x.TargetRoundCount
 	}
 	return 0
+}
+
+func (x *CreateSessionRequest) GetVisibility() Visibility {
+	if x != nil && x.Visibility != nil {
+		return *x.Visibility
+	}
+	return Visibility_VISIBILITY_UNSPECIFIED
 }
 
 type CreateSessionResponse struct {
@@ -807,13 +817,17 @@ var File_veto_v1_session_service_proto protoreflect.FileDescriptor
 
 const file_veto_v1_session_service_proto_rawDesc = "" +
 	"\n" +
-	"\x1dveto/v1/session_service.proto\x12\aveto.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x14veto/v1/common.proto\"\xd8\x01\n" +
+	"\x1dveto/v1/session_service.proto\x12\aveto.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x14veto/v1/common.proto\"\xa1\x02\n" +
 	"\x14CreateSessionRequest\x12\x14\n" +
 	"\x05title\x18\x01 \x01(\tR\x05title\x12:\n" +
 	"\rveto_strategy\x18\x02 \x01(\x0e2\x15.veto.v1.VetoStrategyR\fvetoStrategy\x12$\n" +
 	"\x05tempo\x18\x03 \x01(\x0e2\x0e.veto.v1.TempoR\x05tempo\x121\n" +
-	"\x12target_round_count\x18\x04 \x01(\x05H\x00R\x10targetRoundCount\x88\x01\x01B\x15\n" +
-	"\x13_target_round_count\"C\n" +
+	"\x12target_round_count\x18\x04 \x01(\x05H\x00R\x10targetRoundCount\x88\x01\x01\x128\n" +
+	"\n" +
+	"visibility\x18\x05 \x01(\x0e2\x13.veto.v1.VisibilityH\x01R\n" +
+	"visibility\x88\x01\x01B\x15\n" +
+	"\x13_target_round_countB\r\n" +
+	"\v_visibility\"C\n" +
 	"\x15CreateSessionResponse\x12*\n" +
 	"\asession\x18\x01 \x01(\v2\x10.veto.v1.SessionR\asession\"'\n" +
 	"\x11GetSessionRequest\x12\x12\n" +
@@ -904,40 +918,42 @@ var file_veto_v1_session_service_proto_goTypes = []any{
 	(*RemoveIdeaResponse)(nil),    // 14: veto.v1.RemoveIdeaResponse
 	(VetoStrategy)(0),             // 15: veto.v1.VetoStrategy
 	(Tempo)(0),                    // 16: veto.v1.Tempo
-	(*Session)(nil),               // 17: veto.v1.Session
-	(*SessionDetail)(nil),         // 18: veto.v1.SessionDetail
-	(*timestamppb.Timestamp)(nil), // 19: google.protobuf.Timestamp
-	(*Idea)(nil),                  // 20: veto.v1.Idea
+	(Visibility)(0),               // 17: veto.v1.Visibility
+	(*Session)(nil),               // 18: veto.v1.Session
+	(*SessionDetail)(nil),         // 19: veto.v1.SessionDetail
+	(*timestamppb.Timestamp)(nil), // 20: google.protobuf.Timestamp
+	(*Idea)(nil),                  // 21: veto.v1.Idea
 }
 var file_veto_v1_session_service_proto_depIdxs = []int32{
 	15, // 0: veto.v1.CreateSessionRequest.veto_strategy:type_name -> veto.v1.VetoStrategy
 	16, // 1: veto.v1.CreateSessionRequest.tempo:type_name -> veto.v1.Tempo
-	17, // 2: veto.v1.CreateSessionResponse.session:type_name -> veto.v1.Session
-	18, // 3: veto.v1.GetSessionResponse.session:type_name -> veto.v1.SessionDetail
-	19, // 4: veto.v1.JoinSessionResponse.joined_at:type_name -> google.protobuf.Timestamp
-	17, // 5: veto.v1.StartVotingResponse.session:type_name -> veto.v1.Session
-	17, // 6: veto.v1.SessionSummary.session:type_name -> veto.v1.Session
-	9,  // 7: veto.v1.ListSessionsResponse.sessions:type_name -> veto.v1.SessionSummary
-	20, // 8: veto.v1.SubmitIdeaResponse.idea:type_name -> veto.v1.Idea
-	0,  // 9: veto.v1.SessionService.CreateSession:input_type -> veto.v1.CreateSessionRequest
-	2,  // 10: veto.v1.SessionService.GetSession:input_type -> veto.v1.GetSessionRequest
-	4,  // 11: veto.v1.SessionService.JoinSession:input_type -> veto.v1.JoinSessionRequest
-	6,  // 12: veto.v1.SessionService.StartVoting:input_type -> veto.v1.StartVotingRequest
-	8,  // 13: veto.v1.SessionService.ListSessions:input_type -> veto.v1.ListSessionsRequest
-	11, // 14: veto.v1.IdeaService.SubmitIdea:input_type -> veto.v1.SubmitIdeaRequest
-	13, // 15: veto.v1.IdeaService.RemoveIdea:input_type -> veto.v1.RemoveIdeaRequest
-	1,  // 16: veto.v1.SessionService.CreateSession:output_type -> veto.v1.CreateSessionResponse
-	3,  // 17: veto.v1.SessionService.GetSession:output_type -> veto.v1.GetSessionResponse
-	5,  // 18: veto.v1.SessionService.JoinSession:output_type -> veto.v1.JoinSessionResponse
-	7,  // 19: veto.v1.SessionService.StartVoting:output_type -> veto.v1.StartVotingResponse
-	10, // 20: veto.v1.SessionService.ListSessions:output_type -> veto.v1.ListSessionsResponse
-	12, // 21: veto.v1.IdeaService.SubmitIdea:output_type -> veto.v1.SubmitIdeaResponse
-	14, // 22: veto.v1.IdeaService.RemoveIdea:output_type -> veto.v1.RemoveIdeaResponse
-	16, // [16:23] is the sub-list for method output_type
-	9,  // [9:16] is the sub-list for method input_type
-	9,  // [9:9] is the sub-list for extension type_name
-	9,  // [9:9] is the sub-list for extension extendee
-	0,  // [0:9] is the sub-list for field type_name
+	17, // 2: veto.v1.CreateSessionRequest.visibility:type_name -> veto.v1.Visibility
+	18, // 3: veto.v1.CreateSessionResponse.session:type_name -> veto.v1.Session
+	19, // 4: veto.v1.GetSessionResponse.session:type_name -> veto.v1.SessionDetail
+	20, // 5: veto.v1.JoinSessionResponse.joined_at:type_name -> google.protobuf.Timestamp
+	18, // 6: veto.v1.StartVotingResponse.session:type_name -> veto.v1.Session
+	18, // 7: veto.v1.SessionSummary.session:type_name -> veto.v1.Session
+	9,  // 8: veto.v1.ListSessionsResponse.sessions:type_name -> veto.v1.SessionSummary
+	21, // 9: veto.v1.SubmitIdeaResponse.idea:type_name -> veto.v1.Idea
+	0,  // 10: veto.v1.SessionService.CreateSession:input_type -> veto.v1.CreateSessionRequest
+	2,  // 11: veto.v1.SessionService.GetSession:input_type -> veto.v1.GetSessionRequest
+	4,  // 12: veto.v1.SessionService.JoinSession:input_type -> veto.v1.JoinSessionRequest
+	6,  // 13: veto.v1.SessionService.StartVoting:input_type -> veto.v1.StartVotingRequest
+	8,  // 14: veto.v1.SessionService.ListSessions:input_type -> veto.v1.ListSessionsRequest
+	11, // 15: veto.v1.IdeaService.SubmitIdea:input_type -> veto.v1.SubmitIdeaRequest
+	13, // 16: veto.v1.IdeaService.RemoveIdea:input_type -> veto.v1.RemoveIdeaRequest
+	1,  // 17: veto.v1.SessionService.CreateSession:output_type -> veto.v1.CreateSessionResponse
+	3,  // 18: veto.v1.SessionService.GetSession:output_type -> veto.v1.GetSessionResponse
+	5,  // 19: veto.v1.SessionService.JoinSession:output_type -> veto.v1.JoinSessionResponse
+	7,  // 20: veto.v1.SessionService.StartVoting:output_type -> veto.v1.StartVotingResponse
+	10, // 21: veto.v1.SessionService.ListSessions:output_type -> veto.v1.ListSessionsResponse
+	12, // 22: veto.v1.IdeaService.SubmitIdea:output_type -> veto.v1.SubmitIdeaResponse
+	14, // 23: veto.v1.IdeaService.RemoveIdea:output_type -> veto.v1.RemoveIdeaResponse
+	17, // [17:24] is the sub-list for method output_type
+	10, // [10:17] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_veto_v1_session_service_proto_init() }
