@@ -1,0 +1,85 @@
+name: proto-ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: proto-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-breaking:
+    name: buf lint + breaking
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # buf breaking compares against the base branch, so we need its history.
+          fetch-depth: 0
+
+      # Hermit's committed shims (bin/buf, bin/go, ...) resolve to the versions
+      # pinned in this repo. Prepending bin/ to PATH makes the first call to each
+      # tool bootstrap Hermit and install that pinned version.
+      - name: Activate Hermit toolchain
+        run: echo "${{ github.workspace }}/bin" >> "$GITHUB_PATH"
+
+      - name: Cache Hermit packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/hermit
+          key: hermit-${{ runner.os }}-${{ hashFiles('bin/*.pkg') }}
+
+      - name: buf lint
+        run: buf lint
+
+      # Only meaningful on PRs — on a push to main, HEAD is main.
+      - name: buf breaking (against base branch)
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch --no-tags origin "${{ github.base_ref }}"
+          buf breaking --against ".git#ref=refs/remotes/origin/${{ github.base_ref }}"
+
+  generate-drift:
+    name: generate (go + dart) — committed stubs up to date
+    runs-on: ubuntu-latest
+    env:
+      # protoc-gen-dart ships in the `protoc_plugin` pub package. Pinned so the
+      # drift check is deterministic; must match the version that produced the
+      # committed gen/dart baseline. Bump if the Dart runtime (protobuf) is upgraded.
+      PROTOC_PLUGIN_VERSION: "^22.0.0"
+      PUB_CACHE: ${{ github.workspace }}/.pub-cache
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Activate Hermit toolchain
+        run: echo "${{ github.workspace }}/bin" >> "$GITHUB_PATH"
+
+      - name: Cache Hermit packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/hermit
+          key: hermit-${{ runner.os }}-${{ hashFiles('bin/*.pkg') }}
+
+      # protoc-gen-dart is not a Hermit tool — install it from pub and put it on PATH.
+      - name: Install protoc-gen-dart
+        run: |
+          dart pub global activate protoc_plugin "$PROTOC_PLUGIN_VERSION"
+          echo "$PUB_CACHE/bin" >> "$GITHUB_PATH"
+
+      - name: buf generate (go + dart)
+        run: buf generate
+
+      - name: Verify generated Go compiles
+        run: go build ./...
+
+      - name: Fail if committed stubs are stale
+        run: |
+          if ! git diff --exit-code -- gen/; then
+            echo "::error::Generated code in gen/ is out of date. Run 'buf generate' and commit the result."
+            exit 1
+          fi
