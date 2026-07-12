@@ -5,6 +5,7 @@ on:
     branches: [main]
   pull_request:
 
+# Read-only by default; the regenerate job opts up to write for itself.
 permissions:
   contents: read
 
@@ -13,18 +14,27 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint-breaking:
-    name: buf lint + breaking
+  # PR gate: lint, breaking-change detection, and a drift check that fails if the
+  # committed stubs don't match a fresh `buf generate`. Read-only — never commits.
+  verify:
+    name: lint + breaking + drift check
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    env:
+      # protoc-gen-dart ships in the `protoc_plugin` pub package (22.x line — the
+      # committed gen/dart uses its bundled well-known-types + generic extensions).
+      # Pinned so generation is deterministic; must match the committed baseline.
+      PROTOC_PLUGIN_VERSION: "22.0.0"
+      PUB_CACHE: ${{ github.workspace }}/.pub-cache
     steps:
       - uses: actions/checkout@v4
         with:
-          # buf breaking compares against the base branch, so we need its history.
-          fetch-depth: 0
+          fetch-depth: 0 # buf breaking needs the base branch history
 
-      # Hermit's committed shims (bin/buf, bin/go, ...) resolve to the versions
-      # pinned in this repo. Prepending bin/ to PATH makes the first call to each
-      # tool bootstrap Hermit and install that pinned version.
+      # The repo's committed Hermit shims (bin/buf, bin/go, bin/dart -> flutter)
+      # pin the toolchain versions. Prepending bin/ to PATH makes the first call
+      # to each tool bootstrap Hermit and install that pinned version — no
+      # third-party setup actions needed.
       - name: Activate Hermit toolchain
         run: echo "${{ github.workspace }}/bin" >> "$GITHUB_PATH"
 
@@ -37,35 +47,11 @@ jobs:
       - name: buf lint
         run: buf lint
 
-      # Only meaningful on PRs — on a push to main, HEAD is main.
       - name: buf breaking (against base branch)
-        if: github.event_name == 'pull_request'
         run: |
           git fetch --no-tags origin "${{ github.base_ref }}"
           buf breaking --against ".git#ref=refs/remotes/origin/${{ github.base_ref }}"
 
-  generate-drift:
-    name: generate (go + dart) — committed stubs up to date
-    runs-on: ubuntu-latest
-    env:
-      # protoc-gen-dart ships in the `protoc_plugin` pub package. Pinned so the
-      # drift check is deterministic; must match the version that produced the
-      # committed gen/dart baseline. Bump if the Dart runtime (protobuf) is upgraded.
-      PROTOC_PLUGIN_VERSION: "^22.0.0"
-      PUB_CACHE: ${{ github.workspace }}/.pub-cache
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Activate Hermit toolchain
-        run: echo "${{ github.workspace }}/bin" >> "$GITHUB_PATH"
-
-      - name: Cache Hermit packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/hermit
-          key: hermit-${{ runner.os }}-${{ hashFiles('bin/*.pkg') }}
-
-      # protoc-gen-dart is not a Hermit tool — install it from pub and put it on PATH.
       - name: Install protoc-gen-dart
         run: |
           dart pub global activate protoc_plugin "$PROTOC_PLUGIN_VERSION"
@@ -80,6 +66,56 @@ jobs:
       - name: Fail if committed stubs are stale
         run: |
           if ! git diff --exit-code -- gen/; then
-            echo "::error::Generated code in gen/ is out of date. Run 'buf generate' and commit the result."
+            echo "::error::gen/ is out of date. Run 'buf generate' and commit the result (or merge to let CI regenerate)."
             exit 1
           fi
+
+  # main safety net: regenerate Go + Dart and commit any drift back to main.
+  # A GITHUB_TOKEN-authored push does not re-trigger workflows, so there is no
+  # loop; we also only commit when gen/ actually changed.
+  regenerate:
+    name: regenerate (go + dart) + commit
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      PROTOC_PLUGIN_VERSION: "22.0.0"
+      PUB_CACHE: ${{ github.workspace }}/.pub-cache
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Activate Hermit toolchain
+        run: echo "${{ github.workspace }}/bin" >> "$GITHUB_PATH"
+
+      - name: Cache Hermit packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/hermit
+          key: hermit-${{ runner.os }}-${{ hashFiles('bin/*.pkg') }}
+
+      - name: buf lint
+        run: buf lint
+
+      - name: Install protoc-gen-dart
+        run: |
+          dart pub global activate protoc_plugin "$PROTOC_PLUGIN_VERSION"
+          echo "$PUB_CACHE/bin" >> "$GITHUB_PATH"
+
+      - name: buf generate (go + dart)
+        run: buf generate
+
+      - name: Verify generated Go compiles
+        run: go build ./...
+
+      - name: Commit regenerated stubs if changed
+        run: |
+          if git diff --quiet -- gen/; then
+            echo "gen/ already up to date — nothing to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add gen/
+          git commit -m "chore: regenerate proto stubs [skip ci]"
+          git push origin HEAD:${{ github.ref_name }}
