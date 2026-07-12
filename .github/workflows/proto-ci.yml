@@ -1,0 +1,122 @@
+name: proto-ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Read-only by default; the regenerate job opts up to write for itself.
+permissions:
+  contents: read
+
+concurrency:
+  group: proto-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # PR gate: lint, breaking-change detection, and a drift check that fails if the
+  # committed stubs don't match a fresh `buf generate`. Read-only — never commits.
+  verify:
+    name: lint + breaking + drift check
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    env:
+      # protoc-gen-dart ships in the `protoc_plugin` pub package. 25.x pairs with
+      # protobuf ^6.0.0 — matching veto-flutter's runtime pin and the committed
+      # gen/dart baseline (older majors target protobuf 3.x/4.x/5.x and won't
+      # compile against the current runtime). Pinned so generation is deterministic.
+      PROTOC_PLUGIN_VERSION: "25.0.0"
+      PUB_CACHE: ${{ github.workspace }}/.pub-cache
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # buf breaking needs the base branch history
+
+      # The repo's committed Hermit shims (bin/buf, bin/go, bin/dart -> flutter)
+      # pin the toolchain versions. Prepending bin/ to PATH makes the first call
+      # to each tool bootstrap Hermit and install that pinned version — no
+      # third-party setup actions needed.
+      - name: Activate Hermit toolchain
+        run: echo "${{ github.workspace }}/bin" >> "$GITHUB_PATH"
+
+      - name: Cache Hermit packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/hermit
+          key: hermit-${{ runner.os }}-${{ hashFiles('bin/*.pkg') }}
+
+      - name: buf lint
+        run: buf lint
+
+      - name: buf breaking (against base branch)
+        run: |
+          git fetch --no-tags origin "${{ github.base_ref }}"
+          buf breaking --against ".git#ref=refs/remotes/origin/${{ github.base_ref }}"
+
+      - name: Install protoc-gen-dart
+        run: |
+          dart pub global activate protoc_plugin "$PROTOC_PLUGIN_VERSION"
+          echo "$PUB_CACHE/bin" >> "$GITHUB_PATH"
+
+      - name: buf generate (go + dart)
+        run: buf generate
+
+      - name: Verify generated Go compiles
+        run: go build ./...
+
+      - name: Fail if committed stubs are stale
+        run: |
+          if ! git diff --exit-code -- gen/; then
+            echo "::error::gen/ is out of date. Run 'buf generate' and commit the result (or merge to let CI regenerate)."
+            exit 1
+          fi
+
+  # main safety net: regenerate Go + Dart and commit any drift back to main.
+  # A GITHUB_TOKEN-authored push does not re-trigger workflows, so there is no
+  # loop; we also only commit when gen/ actually changed.
+  regenerate:
+    name: regenerate (go + dart) + commit
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      PROTOC_PLUGIN_VERSION: "25.0.0" # pairs with protobuf ^6.0.0 — see verify job note
+      PUB_CACHE: ${{ github.workspace }}/.pub-cache
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Activate Hermit toolchain
+        run: echo "${{ github.workspace }}/bin" >> "$GITHUB_PATH"
+
+      - name: Cache Hermit packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/hermit
+          key: hermit-${{ runner.os }}-${{ hashFiles('bin/*.pkg') }}
+
+      - name: buf lint
+        run: buf lint
+
+      - name: Install protoc-gen-dart
+        run: |
+          dart pub global activate protoc_plugin "$PROTOC_PLUGIN_VERSION"
+          echo "$PUB_CACHE/bin" >> "$GITHUB_PATH"
+
+      - name: buf generate (go + dart)
+        run: buf generate
+
+      - name: Verify generated Go compiles
+        run: go build ./...
+
+      - name: Commit regenerated stubs if changed
+        run: |
+          if git diff --quiet -- gen/; then
+            echo "gen/ already up to date — nothing to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add gen/
+          git commit -m "chore: regenerate proto stubs [skip ci]"
+          git push origin HEAD:${{ github.ref_name }}

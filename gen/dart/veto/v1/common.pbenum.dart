@@ -89,5 +89,30 @@ class Tempo extends $pb.ProtobufEnum {
   const Tempo._(super.value, super.name);
 }
 
+/// Who can join a session. MVP honors only VISIBILITY_INVITE_ONLY (join by code).
+/// VISIBILITY_PUBLIC ("anyone nearby") is reserved for a future geo/presence-backed
+/// phase — CreateSession rejects it for now. See PLAN-00 reconciliation #2.
+class Visibility extends $pb.ProtobufEnum {
+  static const Visibility VISIBILITY_UNSPECIFIED =
+      Visibility._(0, _omitEnumNames ? '' : 'VISIBILITY_UNSPECIFIED');
+  static const Visibility VISIBILITY_INVITE_ONLY =
+      Visibility._(1, _omitEnumNames ? '' : 'VISIBILITY_INVITE_ONLY');
+  static const Visibility VISIBILITY_PUBLIC =
+      Visibility._(2, _omitEnumNames ? '' : 'VISIBILITY_PUBLIC');
+
+  static const $core.List<Visibility> values = <Visibility>[
+    VISIBILITY_UNSPECIFIED,
+    VISIBILITY_INVITE_ONLY,
+    VISIBILITY_PUBLIC,
+  ];
+
+  static final $core.List<Visibility?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 2);
+  static Visibility? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const Visibility._(super.value, super.name);
+}
+
 const $core.bool _omitEnumNames =
     $core.bool.fromEnvironment('protobuf.omit_enum_names');

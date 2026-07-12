@@ -677,6 +677,7 @@ class Session extends $pb.GeneratedMessage {
     $core.int? targetRoundCount,
     $0.Timestamp? createdAt,
     $0.Timestamp? completedAt,
+    Visibility? visibility,
   }) {
     final result = create();
     if (id != null) result.id = id;
@@ -690,6 +691,7 @@ class Session extends $pb.GeneratedMessage {
     if (targetRoundCount != null) result.targetRoundCount = targetRoundCount;
     if (createdAt != null) result.createdAt = createdAt;
     if (completedAt != null) result.completedAt = completedAt;
+    if (visibility != null) result.visibility = visibility;
     return result;
   }
 
@@ -721,6 +723,8 @@ class Session extends $pb.GeneratedMessage {
         subBuilder: $0.Timestamp.create)
     ..aOM<$0.Timestamp>(11, _omitFieldNames ? '' : 'completedAt',
         subBuilder: $0.Timestamp.create)
+    ..aE<Visibility>(12, _omitFieldNames ? '' : 'visibility',
+        enumValues: Visibility.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -843,6 +847,15 @@ class Session extends $pb.GeneratedMessage {
   void clearCompletedAt() => $_clearField(11);
   @$pb.TagNumber(11)
   $0.Timestamp ensureCompletedAt() => $_ensure(10);
+
+  @$pb.TagNumber(12)
+  Visibility get visibility => $_getN(11);
+  @$pb.TagNumber(12)
+  set visibility(Visibility value) => $_setField(12, value);
+  @$pb.TagNumber(12)
+  $core.bool hasVisibility() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearVisibility() => $_clearField(12);
 }
 
 class SessionDetail extends $pb.GeneratedMessage {

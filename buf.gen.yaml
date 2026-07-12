@@ -1,11 +1,17 @@
 version: v2
 plugins:
-  - remote: buf.build/protocolbuffers/go
+  # Plugin versions are pinned so `buf generate` is reproducible and the CI
+  # drift check (.github/workflows/proto-ci.yml) is stable — an unpinned remote
+  # plugin would regenerate differently whenever the BSR "latest" tag moves.
+  # These must match whatever produced the committed gen/go baseline.
+  - remote: buf.build/protocolbuffers/go:v1.36.11
     out: gen/go
     opt: paths=source_relative
-  - remote: buf.build/grpc/go
+  - remote: buf.build/grpc/go:v1.6.2
     out: gen/go
     opt: paths=source_relative
+  # protoc-gen-dart comes from the `protoc_plugin` pub package; CI pins its
+  # version via PROTOC_PLUGIN_VERSION in the workflow.
   - local: protoc-gen-dart
     out: gen/dart
     opt: grpc

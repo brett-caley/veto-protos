@@ -26,12 +26,14 @@ class CreateSessionRequest extends $pb.GeneratedMessage {
     $1.VetoStrategy? vetoStrategy,
     $1.Tempo? tempo,
     $core.int? targetRoundCount,
+    $1.Visibility? visibility,
   }) {
     final result = create();
     if (title != null) result.title = title;
     if (vetoStrategy != null) result.vetoStrategy = vetoStrategy;
     if (tempo != null) result.tempo = tempo;
     if (targetRoundCount != null) result.targetRoundCount = targetRoundCount;
+    if (visibility != null) result.visibility = visibility;
     return result;
   }
 
@@ -54,6 +56,8 @@ class CreateSessionRequest extends $pb.GeneratedMessage {
     ..aE<$1.Tempo>(3, _omitFieldNames ? '' : 'tempo',
         enumValues: $1.Tempo.values)
     ..aI(4, _omitFieldNames ? '' : 'targetRoundCount')
+    ..aE<$1.Visibility>(5, _omitFieldNames ? '' : 'visibility',
+        enumValues: $1.Visibility.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -114,6 +118,17 @@ class CreateSessionRequest extends $pb.GeneratedMessage {
   $core.bool hasTargetRoundCount() => $_has(3);
   @$pb.TagNumber(4)
   void clearTargetRoundCount() => $_clearField(4);
+
+  /// Optional. Defaults to VISIBILITY_INVITE_ONLY when unset. MVP rejects
+  /// VISIBILITY_PUBLIC with INVALID_ARGUMENT — see PLAN-00 reconciliation #2.
+  @$pb.TagNumber(5)
+  $1.Visibility get visibility => $_getN(4);
+  @$pb.TagNumber(5)
+  set visibility($1.Visibility value) => $_setField(5, value);
+  @$pb.TagNumber(5)
+  $core.bool hasVisibility() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearVisibility() => $_clearField(5);
 }
 
 class CreateSessionResponse extends $pb.GeneratedMessage {

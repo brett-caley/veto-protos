@@ -73,6 +73,7 @@ message Session {
   int32 target_round_count = 9;
   google.protobuf.Timestamp created_at = 10;
   optional google.protobuf.Timestamp completed_at = 11;
+  Visibility visibility = 12;
 }
 
 message SessionDetail {
@@ -101,4 +102,13 @@ enum Tempo {
   TEMPO_QUICK_DECISION = 1;
   // Long/no round timer, host can ForceAdvanceRound. See VETO_MECHANICS.md §6.
   TEMPO_ONGOING = 2;
+}
+
+// Who can join a session. MVP honors only VISIBILITY_INVITE_ONLY (join by code).
+// VISIBILITY_PUBLIC ("anyone nearby") is reserved for a future geo/presence-backed
+// phase — CreateSession rejects it for now. See PLAN-00 reconciliation #2.
+enum Visibility {
+  VISIBILITY_UNSPECIFIED = 0;
+  VISIBILITY_INVITE_ONLY = 1;
+  VISIBILITY_PUBLIC = 2; // reserved, not honored in MVP
 }

@@ -62,6 +62,21 @@ final $typed_data.Uint8List tempoDescriptor = $convert.base64Decode(
     'CgVUZW1wbxIVChFURU1QT19VTlNQRUNJRklFRBAAEhgKFFRFTVBPX1FVSUNLX0RFQ0lTSU9OEA'
     'ESEQoNVEVNUE9fT05HT0lORxAC');
 
+@$core.Deprecated('Use visibilityDescriptor instead')
+const Visibility$json = {
+  '1': 'Visibility',
+  '2': [
+    {'1': 'VISIBILITY_UNSPECIFIED', '2': 0},
+    {'1': 'VISIBILITY_INVITE_ONLY', '2': 1},
+    {'1': 'VISIBILITY_PUBLIC', '2': 2},
+  ],
+};
+
+/// Descriptor for `Visibility`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List visibilityDescriptor = $convert.base64Decode(
+    'CgpWaXNpYmlsaXR5EhoKFlZJU0lCSUxJVFlfVU5TUEVDSUZJRUQQABIaChZWSVNJQklMSVRZX0'
+    'lOVklURV9PTkxZEAESFQoRVklTSUJJTElUWV9QVUJMSUMQAg==');
+
 @$core.Deprecated('Use userDescriptor instead')
 const User$json = {
   '1': 'User',
@@ -339,6 +354,14 @@ const Session$json = {
       '10': 'completedAt',
       '17': true
     },
+    {
+      '1': 'visibility',
+      '3': 12,
+      '4': 1,
+      '5': 14,
+      '6': '.veto.v1.Visibility',
+      '10': 'visibility'
+    },
   ],
   '8': [
     {'1': '_completed_at'},
@@ -355,7 +378,8 @@ final $typed_data.Uint8List sessionDescriptor = $convert.base64Decode(
     'FyZ2V0X3JvdW5kX2NvdW50GAkgASgFUhB0YXJnZXRSb3VuZENvdW50EjkKCmNyZWF0ZWRfYXQY'
     'CiABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wUgljcmVhdGVkQXQSQgoMY29tcGxldG'
     'VkX2F0GAsgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEgAUgtjb21wbGV0ZWRBdIgB'
-    'AUIPCg1fY29tcGxldGVkX2F0');
+    'ARIzCgp2aXNpYmlsaXR5GAwgASgOMhMudmV0by52MS5WaXNpYmlsaXR5Ugp2aXNpYmlsaXR5Qg'
+    '8KDV9jb21wbGV0ZWRfYXQ=');
 
 @$core.Deprecated('Use sessionDetailDescriptor instead')
 const SessionDetail$json = {
