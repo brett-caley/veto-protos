@@ -59,6 +59,25 @@ message RevealedVote {
   string display_name = 3;
   bool vetoed = 4;
   optional string comment = 5;
+  // Tokens this participant poured on this idea for the resolved round. Always 0 under
+  // VETO_STRATEGY_RAW (the boolean vetoed carries the signal there); the per-idea token
+  // total under VETO_STRATEGY_TOKEN, so the reveal can show how hard an idea was hit.
+  // See PLAN-10 / VETO_MECHANICS.md §5.
+  int32 tokens_spent = 6;
+}
+
+// Per-session configuration for VETO_STRATEGY_TOKEN. Carried on CreateSessionRequest and
+// honored only when veto_strategy == VETO_STRATEGY_TOKEN (ignored for other strategies).
+// Defaults (tokens_per_round=10, max_tokens_per_idea=5) are placeholders pending the PLAN-10
+// scoring spike; the shapes are stable regardless of the tuned values.
+message TokenVetoConfig {
+  // Tokens each participant receives per round. Refills every round — unspent tokens carry
+  // no signal and do not roll over (VETO_MECHANICS.md §5). Must be >= 1. Defaults to 10 when unset.
+  int32 tokens_per_round = 1;
+  // Max tokens one participant may pour on a single idea in a round. Must be >= 1 and
+  // <= tokens_per_round. Enforces the §5 fairness invariant — one participant's grudge cannot
+  // unilaterally eliminate an idea. Defaults to 5 when unset.
+  int32 max_tokens_per_idea = 2;
 }
 
 message Session {
@@ -92,8 +111,13 @@ enum SessionPhase {
 enum VetoStrategy {
   VETO_STRATEGY_UNSPECIFIED = 0;
   VETO_STRATEGY_RAW = 1;
-  // Reserved. Not implemented for MVP — CreateSession rejects it. See VETO_MECHANICS.md open questions.
+  // Token Veto: each participant gets a per-round token pool (TokenVetoConfig) and pours tokens
+  // on ideas to express intensity, capped per idea for fairness. Shares the §4 elimination path
+  // with Raw Veto — only the scoring input differs (token sum vs. veto count). See PLAN-10.
   VETO_STRATEGY_TOKEN = 2;
+  // Reserved. Session-scarce veto budget — a finite pool rationed across the whole session,
+  // not refreshed per round. Not implemented; CreateSession rejects it. See PLAN-10 #4.
+  VETO_STRATEGY_BUDGET = 3;
 }
 
 enum Tempo {
