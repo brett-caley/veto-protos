@@ -93,6 +93,11 @@ message Session {
   google.protobuf.Timestamp created_at = 10;
   optional google.protobuf.Timestamp completed_at = 11;
   Visibility visibility = 12;
+  // The resolved Token Veto config for this session (defaults applied), so any participant —
+  // not just the host who created it — can render the token HUD and clamp allocation. Set iff
+  // veto_strategy == VETO_STRATEGY_TOKEN; unset for Raw Veto. Carried anywhere Session is
+  // (GetSession, CreateSession, StateSnapshot, …). See PLAN-10.
+  optional TokenVetoConfig token_veto_config = 13;
 }
 
 message SessionDetail {
