@@ -27,6 +27,10 @@ message CreateSessionRequest {
   // Optional. Defaults to VISIBILITY_INVITE_ONLY when unset. MVP rejects
   // VISIBILITY_PUBLIC with INVALID_ARGUMENT — see PLAN-00 reconciliation #2.
   optional Visibility visibility = 5;
+  // Optional. Token Veto tuning, honored only when veto_strategy == VETO_STRATEGY_TOKEN
+  // (ignored otherwise). Unset → defaults (10 tokens/round, cap 5/idea). Rejected with
+  // INVALID_ARGUMENT if max_tokens_per_idea > tokens_per_round or either value < 1. See PLAN-10.
+  optional TokenVetoConfig token_veto_config = 6;
 }
 
 message CreateSessionResponse {
@@ -71,6 +75,19 @@ message SessionSummary {
   Session session = 1;
   int32 participants_count = 2;
   int32 ideas_count = 3;
+  // Preview slice for the dashboard cards (veto #52) — ListSessions' counts alone can't render
+  // the Home/History cards, so SessionSummary carries a small denormalized preview.
+  //
+  // First few participant display names for the avatar stack ("+N others"). Ordering is
+  // host-first then join order; length is a server-capped preview, not the full roster
+  // (participants_count is the true total). Empty is valid.
+  repeated string participant_preview = 4;
+  // Winning idea text, set only for completed sessions (SESSION_PHASE_COMPLETE) to render the
+  // History winner chip. Unset for lobby/voting sessions.
+  optional string winning_idea_text = 5;
+  // Participants who have locked their submission in the current round, for the "4/6 voted"
+  // progress on active cards. 0 outside SESSION_PHASE_VOTING.
+  int32 voted_count = 6;
 }
 
 message ListSessionsResponse {

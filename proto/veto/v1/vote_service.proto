@@ -11,6 +11,7 @@ import "veto/v1/common.proto";
 // until the round resolves.
 service VoteService {
   rpc CastVote(CastVoteRequest) returns (CastVoteResponse);
+  rpc CastTokenSpend(CastTokenSpendRequest) returns (CastTokenSpendResponse);
   rpc LockRoundSubmission(LockRoundSubmissionRequest) returns (LockRoundSubmissionResponse);
   rpc UnlockRoundSubmission(UnlockRoundSubmissionRequest) returns (UnlockRoundSubmissionResponse);
   rpc ForceAdvanceRound(ForceAdvanceRoundRequest) returns (ForceAdvanceRoundResponse);
@@ -33,6 +34,32 @@ message CastVoteRequest {
 
 message CastVoteResponse {
   Vote vote = 1;
+}
+
+// The Token Veto counterpart to CastVote (VETO_STRATEGY_TOKEN sessions only). Where CastVote is a
+// binary set-state, token spend carries a magnitude. Idempotent set of the caller's desired total
+// tokens on one active idea for the current round — not an increment. Same blind-round rules as
+// CastVote: the spend never broadcasts to other participants; only the aggregate lock count
+// (RoundLockProgress) and the all-at-once reveal (RoundResolved/WinnerRevealed) are visible.
+// Rejected if it would exceed max_tokens_per_idea or the caller's remaining per-round budget.
+// Raw Veto sessions use CastVote instead — the two are mutually exclusive per session by
+// veto_strategy. See PLAN-10.
+message CastTokenSpendRequest {
+  string code = 1;
+  // Required. Must be an active (non-eliminated) idea in this session.
+  string idea_id = 2;
+  // Required. Desired total tokens on this idea for the current round; 0 clears the spend.
+  // Must be >= 0 and <= max_tokens_per_idea, and must not push the caller's round total over
+  // tokens_per_round.
+  int32 tokens = 3;
+}
+
+message CastTokenSpendResponse {
+  // Confirmed tokens on this idea for the current round after applying the set.
+  int32 idea_tokens = 1;
+  // The caller's tokens still available this round (tokens_per_round minus the sum of their
+  // spends across all ideas), so the client HUD can reconcile against the server.
+  int32 tokens_remaining = 2;
 }
 
 // Lock in the caller's current veto choices for this round. If this lock brings locked_count to
