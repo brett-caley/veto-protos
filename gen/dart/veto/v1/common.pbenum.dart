@@ -45,18 +45,26 @@ class VetoStrategy extends $pb.ProtobufEnum {
   static const VetoStrategy VETO_STRATEGY_RAW =
       VetoStrategy._(1, _omitEnumNames ? '' : 'VETO_STRATEGY_RAW');
 
-  /// Reserved. Not implemented for MVP — CreateSession rejects it. See VETO_MECHANICS.md open questions.
+  /// Token Veto: each participant gets a per-round token pool (TokenVetoConfig) and pours tokens
+  /// on ideas to express intensity, capped per idea for fairness. Shares the §4 elimination path
+  /// with Raw Veto — only the scoring input differs (token sum vs. veto count). See PLAN-10.
   static const VetoStrategy VETO_STRATEGY_TOKEN =
       VetoStrategy._(2, _omitEnumNames ? '' : 'VETO_STRATEGY_TOKEN');
+
+  /// Reserved. Session-scarce veto budget — a finite pool rationed across the whole session,
+  /// not refreshed per round. Not implemented; CreateSession rejects it. See PLAN-10 #4.
+  static const VetoStrategy VETO_STRATEGY_BUDGET =
+      VetoStrategy._(3, _omitEnumNames ? '' : 'VETO_STRATEGY_BUDGET');
 
   static const $core.List<VetoStrategy> values = <VetoStrategy>[
     VETO_STRATEGY_UNSPECIFIED,
     VETO_STRATEGY_RAW,
     VETO_STRATEGY_TOKEN,
+    VETO_STRATEGY_BUDGET,
   ];
 
   static final $core.List<VetoStrategy?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 2);
+      $pb.ProtobufEnum.$_initByValueList(values, 3);
   static VetoStrategy? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 

@@ -141,6 +141,133 @@ func (x *CastVoteResponse) GetVote() *Vote {
 	return nil
 }
 
+// The Token Veto counterpart to CastVote (VETO_STRATEGY_TOKEN sessions only). Where CastVote is a
+// binary set-state, token spend carries a magnitude. Idempotent set of the caller's desired total
+// tokens on one active idea for the current round — not an increment. Same blind-round rules as
+// CastVote: the spend never broadcasts to other participants; only the aggregate lock count
+// (RoundLockProgress) and the all-at-once reveal (RoundResolved/WinnerRevealed) are visible.
+// Rejected if it would exceed max_tokens_per_idea or the caller's remaining per-round budget.
+// Raw Veto sessions use CastVote instead — the two are mutually exclusive per session by
+// veto_strategy. See PLAN-10.
+type CastTokenSpendRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Code  string                 `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
+	// Required. Must be an active (non-eliminated) idea in this session.
+	IdeaId string `protobuf:"bytes,2,opt,name=idea_id,json=ideaId,proto3" json:"idea_id,omitempty"`
+	// Required. Desired total tokens on this idea for the current round; 0 clears the spend.
+	// Must be >= 0 and <= max_tokens_per_idea, and must not push the caller's round total over
+	// tokens_per_round.
+	Tokens        int32 `protobuf:"varint,3,opt,name=tokens,proto3" json:"tokens,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CastTokenSpendRequest) Reset() {
+	*x = CastTokenSpendRequest{}
+	mi := &file_veto_v1_vote_service_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CastTokenSpendRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CastTokenSpendRequest) ProtoMessage() {}
+
+func (x *CastTokenSpendRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_veto_v1_vote_service_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CastTokenSpendRequest.ProtoReflect.Descriptor instead.
+func (*CastTokenSpendRequest) Descriptor() ([]byte, []int) {
+	return file_veto_v1_vote_service_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *CastTokenSpendRequest) GetCode() string {
+	if x != nil {
+		return x.Code
+	}
+	return ""
+}
+
+func (x *CastTokenSpendRequest) GetIdeaId() string {
+	if x != nil {
+		return x.IdeaId
+	}
+	return ""
+}
+
+func (x *CastTokenSpendRequest) GetTokens() int32 {
+	if x != nil {
+		return x.Tokens
+	}
+	return 0
+}
+
+type CastTokenSpendResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Confirmed tokens on this idea for the current round after applying the set.
+	IdeaTokens int32 `protobuf:"varint,1,opt,name=idea_tokens,json=ideaTokens,proto3" json:"idea_tokens,omitempty"`
+	// The caller's tokens still available this round (tokens_per_round minus the sum of their
+	// spends across all ideas), so the client HUD can reconcile against the server.
+	TokensRemaining int32 `protobuf:"varint,2,opt,name=tokens_remaining,json=tokensRemaining,proto3" json:"tokens_remaining,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *CastTokenSpendResponse) Reset() {
+	*x = CastTokenSpendResponse{}
+	mi := &file_veto_v1_vote_service_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CastTokenSpendResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CastTokenSpendResponse) ProtoMessage() {}
+
+func (x *CastTokenSpendResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_veto_v1_vote_service_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CastTokenSpendResponse.ProtoReflect.Descriptor instead.
+func (*CastTokenSpendResponse) Descriptor() ([]byte, []int) {
+	return file_veto_v1_vote_service_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *CastTokenSpendResponse) GetIdeaTokens() int32 {
+	if x != nil {
+		return x.IdeaTokens
+	}
+	return 0
+}
+
+func (x *CastTokenSpendResponse) GetTokensRemaining() int32 {
+	if x != nil {
+		return x.TokensRemaining
+	}
+	return 0
+}
+
 // Lock in the caller's current veto choices for this round. If this lock brings locked_count to
 // participants_count, the round resolves immediately — the same resolution path as timer expiry
 // or force-advance.
@@ -153,7 +280,7 @@ type LockRoundSubmissionRequest struct {
 
 func (x *LockRoundSubmissionRequest) Reset() {
 	*x = LockRoundSubmissionRequest{}
-	mi := &file_veto_v1_vote_service_proto_msgTypes[2]
+	mi := &file_veto_v1_vote_service_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -165,7 +292,7 @@ func (x *LockRoundSubmissionRequest) String() string {
 func (*LockRoundSubmissionRequest) ProtoMessage() {}
 
 func (x *LockRoundSubmissionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_veto_v1_vote_service_proto_msgTypes[2]
+	mi := &file_veto_v1_vote_service_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -178,7 +305,7 @@ func (x *LockRoundSubmissionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LockRoundSubmissionRequest.ProtoReflect.Descriptor instead.
 func (*LockRoundSubmissionRequest) Descriptor() ([]byte, []int) {
-	return file_veto_v1_vote_service_proto_rawDescGZIP(), []int{2}
+	return file_veto_v1_vote_service_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *LockRoundSubmissionRequest) GetCode() string {
@@ -199,7 +326,7 @@ type LockRoundSubmissionResponse struct {
 
 func (x *LockRoundSubmissionResponse) Reset() {
 	*x = LockRoundSubmissionResponse{}
-	mi := &file_veto_v1_vote_service_proto_msgTypes[3]
+	mi := &file_veto_v1_vote_service_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -211,7 +338,7 @@ func (x *LockRoundSubmissionResponse) String() string {
 func (*LockRoundSubmissionResponse) ProtoMessage() {}
 
 func (x *LockRoundSubmissionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_veto_v1_vote_service_proto_msgTypes[3]
+	mi := &file_veto_v1_vote_service_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -224,7 +351,7 @@ func (x *LockRoundSubmissionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LockRoundSubmissionResponse.ProtoReflect.Descriptor instead.
 func (*LockRoundSubmissionResponse) Descriptor() ([]byte, []int) {
-	return file_veto_v1_vote_service_proto_rawDescGZIP(), []int{3}
+	return file_veto_v1_vote_service_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *LockRoundSubmissionResponse) GetRound() int32 {
@@ -258,7 +385,7 @@ type UnlockRoundSubmissionRequest struct {
 
 func (x *UnlockRoundSubmissionRequest) Reset() {
 	*x = UnlockRoundSubmissionRequest{}
-	mi := &file_veto_v1_vote_service_proto_msgTypes[4]
+	mi := &file_veto_v1_vote_service_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -270,7 +397,7 @@ func (x *UnlockRoundSubmissionRequest) String() string {
 func (*UnlockRoundSubmissionRequest) ProtoMessage() {}
 
 func (x *UnlockRoundSubmissionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_veto_v1_vote_service_proto_msgTypes[4]
+	mi := &file_veto_v1_vote_service_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -283,7 +410,7 @@ func (x *UnlockRoundSubmissionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UnlockRoundSubmissionRequest.ProtoReflect.Descriptor instead.
 func (*UnlockRoundSubmissionRequest) Descriptor() ([]byte, []int) {
-	return file_veto_v1_vote_service_proto_rawDescGZIP(), []int{4}
+	return file_veto_v1_vote_service_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *UnlockRoundSubmissionRequest) GetCode() string {
@@ -304,7 +431,7 @@ type UnlockRoundSubmissionResponse struct {
 
 func (x *UnlockRoundSubmissionResponse) Reset() {
 	*x = UnlockRoundSubmissionResponse{}
-	mi := &file_veto_v1_vote_service_proto_msgTypes[5]
+	mi := &file_veto_v1_vote_service_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -316,7 +443,7 @@ func (x *UnlockRoundSubmissionResponse) String() string {
 func (*UnlockRoundSubmissionResponse) ProtoMessage() {}
 
 func (x *UnlockRoundSubmissionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_veto_v1_vote_service_proto_msgTypes[5]
+	mi := &file_veto_v1_vote_service_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -329,7 +456,7 @@ func (x *UnlockRoundSubmissionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UnlockRoundSubmissionResponse.ProtoReflect.Descriptor instead.
 func (*UnlockRoundSubmissionResponse) Descriptor() ([]byte, []int) {
-	return file_veto_v1_vote_service_proto_rawDescGZIP(), []int{5}
+	return file_veto_v1_vote_service_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *UnlockRoundSubmissionResponse) GetRound() int32 {
@@ -364,7 +491,7 @@ type ForceAdvanceRoundRequest struct {
 
 func (x *ForceAdvanceRoundRequest) Reset() {
 	*x = ForceAdvanceRoundRequest{}
-	mi := &file_veto_v1_vote_service_proto_msgTypes[6]
+	mi := &file_veto_v1_vote_service_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -376,7 +503,7 @@ func (x *ForceAdvanceRoundRequest) String() string {
 func (*ForceAdvanceRoundRequest) ProtoMessage() {}
 
 func (x *ForceAdvanceRoundRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_veto_v1_vote_service_proto_msgTypes[6]
+	mi := &file_veto_v1_vote_service_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -389,7 +516,7 @@ func (x *ForceAdvanceRoundRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ForceAdvanceRoundRequest.ProtoReflect.Descriptor instead.
 func (*ForceAdvanceRoundRequest) Descriptor() ([]byte, []int) {
-	return file_veto_v1_vote_service_proto_rawDescGZIP(), []int{6}
+	return file_veto_v1_vote_service_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *ForceAdvanceRoundRequest) GetCode() string {
@@ -408,7 +535,7 @@ type ForceAdvanceRoundResponse struct {
 
 func (x *ForceAdvanceRoundResponse) Reset() {
 	*x = ForceAdvanceRoundResponse{}
-	mi := &file_veto_v1_vote_service_proto_msgTypes[7]
+	mi := &file_veto_v1_vote_service_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -420,7 +547,7 @@ func (x *ForceAdvanceRoundResponse) String() string {
 func (*ForceAdvanceRoundResponse) ProtoMessage() {}
 
 func (x *ForceAdvanceRoundResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_veto_v1_vote_service_proto_msgTypes[7]
+	mi := &file_veto_v1_vote_service_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -433,7 +560,7 @@ func (x *ForceAdvanceRoundResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ForceAdvanceRoundResponse.ProtoReflect.Descriptor instead.
 func (*ForceAdvanceRoundResponse) Descriptor() ([]byte, []int) {
-	return file_veto_v1_vote_service_proto_rawDescGZIP(), []int{7}
+	return file_veto_v1_vote_service_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *ForceAdvanceRoundResponse) GetSession() *Session {
@@ -456,7 +583,15 @@ const file_veto_v1_vote_service_proto_rawDesc = "" +
 	"\n" +
 	"\b_comment\"5\n" +
 	"\x10CastVoteResponse\x12!\n" +
-	"\x04vote\x18\x01 \x01(\v2\r.veto.v1.VoteR\x04vote\"0\n" +
+	"\x04vote\x18\x01 \x01(\v2\r.veto.v1.VoteR\x04vote\"\\\n" +
+	"\x15CastTokenSpendRequest\x12\x12\n" +
+	"\x04code\x18\x01 \x01(\tR\x04code\x12\x17\n" +
+	"\aidea_id\x18\x02 \x01(\tR\x06ideaId\x12\x16\n" +
+	"\x06tokens\x18\x03 \x01(\x05R\x06tokens\"d\n" +
+	"\x16CastTokenSpendResponse\x12\x1f\n" +
+	"\videa_tokens\x18\x01 \x01(\x05R\n" +
+	"ideaTokens\x12)\n" +
+	"\x10tokens_remaining\x18\x02 \x01(\x05R\x0ftokensRemaining\"0\n" +
 	"\x1aLockRoundSubmissionRequest\x12\x12\n" +
 	"\x04code\x18\x01 \x01(\tR\x04code\"\x85\x01\n" +
 	"\x1bLockRoundSubmissionResponse\x12\x14\n" +
@@ -472,9 +607,10 @@ const file_veto_v1_vote_service_proto_rawDesc = "" +
 	"\x18ForceAdvanceRoundRequest\x12\x12\n" +
 	"\x04code\x18\x01 \x01(\tR\x04code\"G\n" +
 	"\x19ForceAdvanceRoundResponse\x12*\n" +
-	"\asession\x18\x01 \x01(\v2\x10.veto.v1.SessionR\asession2\xf4\x02\n" +
+	"\asession\x18\x01 \x01(\v2\x10.veto.v1.SessionR\asession2\xc7\x03\n" +
 	"\vVoteService\x12?\n" +
-	"\bCastVote\x12\x18.veto.v1.CastVoteRequest\x1a\x19.veto.v1.CastVoteResponse\x12`\n" +
+	"\bCastVote\x12\x18.veto.v1.CastVoteRequest\x1a\x19.veto.v1.CastVoteResponse\x12Q\n" +
+	"\x0eCastTokenSpend\x12\x1e.veto.v1.CastTokenSpendRequest\x1a\x1f.veto.v1.CastTokenSpendResponse\x12`\n" +
 	"\x13LockRoundSubmission\x12#.veto.v1.LockRoundSubmissionRequest\x1a$.veto.v1.LockRoundSubmissionResponse\x12f\n" +
 	"\x15UnlockRoundSubmission\x12%.veto.v1.UnlockRoundSubmissionRequest\x1a&.veto.v1.UnlockRoundSubmissionResponse\x12Z\n" +
 	"\x11ForceAdvanceRound\x12!.veto.v1.ForceAdvanceRoundRequest\x1a\".veto.v1.ForceAdvanceRoundResponseB:Z8github.com/brett-caley/veto-protos/gen/go/veto/v1;vetov1b\x06proto3"
@@ -491,35 +627,39 @@ func file_veto_v1_vote_service_proto_rawDescGZIP() []byte {
 	return file_veto_v1_vote_service_proto_rawDescData
 }
 
-var file_veto_v1_vote_service_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_veto_v1_vote_service_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_veto_v1_vote_service_proto_goTypes = []any{
 	(*CastVoteRequest)(nil),               // 0: veto.v1.CastVoteRequest
 	(*CastVoteResponse)(nil),              // 1: veto.v1.CastVoteResponse
-	(*LockRoundSubmissionRequest)(nil),    // 2: veto.v1.LockRoundSubmissionRequest
-	(*LockRoundSubmissionResponse)(nil),   // 3: veto.v1.LockRoundSubmissionResponse
-	(*UnlockRoundSubmissionRequest)(nil),  // 4: veto.v1.UnlockRoundSubmissionRequest
-	(*UnlockRoundSubmissionResponse)(nil), // 5: veto.v1.UnlockRoundSubmissionResponse
-	(*ForceAdvanceRoundRequest)(nil),      // 6: veto.v1.ForceAdvanceRoundRequest
-	(*ForceAdvanceRoundResponse)(nil),     // 7: veto.v1.ForceAdvanceRoundResponse
-	(*Vote)(nil),                          // 8: veto.v1.Vote
-	(*Session)(nil),                       // 9: veto.v1.Session
+	(*CastTokenSpendRequest)(nil),         // 2: veto.v1.CastTokenSpendRequest
+	(*CastTokenSpendResponse)(nil),        // 3: veto.v1.CastTokenSpendResponse
+	(*LockRoundSubmissionRequest)(nil),    // 4: veto.v1.LockRoundSubmissionRequest
+	(*LockRoundSubmissionResponse)(nil),   // 5: veto.v1.LockRoundSubmissionResponse
+	(*UnlockRoundSubmissionRequest)(nil),  // 6: veto.v1.UnlockRoundSubmissionRequest
+	(*UnlockRoundSubmissionResponse)(nil), // 7: veto.v1.UnlockRoundSubmissionResponse
+	(*ForceAdvanceRoundRequest)(nil),      // 8: veto.v1.ForceAdvanceRoundRequest
+	(*ForceAdvanceRoundResponse)(nil),     // 9: veto.v1.ForceAdvanceRoundResponse
+	(*Vote)(nil),                          // 10: veto.v1.Vote
+	(*Session)(nil),                       // 11: veto.v1.Session
 }
 var file_veto_v1_vote_service_proto_depIdxs = []int32{
-	8, // 0: veto.v1.CastVoteResponse.vote:type_name -> veto.v1.Vote
-	9, // 1: veto.v1.ForceAdvanceRoundResponse.session:type_name -> veto.v1.Session
-	0, // 2: veto.v1.VoteService.CastVote:input_type -> veto.v1.CastVoteRequest
-	2, // 3: veto.v1.VoteService.LockRoundSubmission:input_type -> veto.v1.LockRoundSubmissionRequest
-	4, // 4: veto.v1.VoteService.UnlockRoundSubmission:input_type -> veto.v1.UnlockRoundSubmissionRequest
-	6, // 5: veto.v1.VoteService.ForceAdvanceRound:input_type -> veto.v1.ForceAdvanceRoundRequest
-	1, // 6: veto.v1.VoteService.CastVote:output_type -> veto.v1.CastVoteResponse
-	3, // 7: veto.v1.VoteService.LockRoundSubmission:output_type -> veto.v1.LockRoundSubmissionResponse
-	5, // 8: veto.v1.VoteService.UnlockRoundSubmission:output_type -> veto.v1.UnlockRoundSubmissionResponse
-	7, // 9: veto.v1.VoteService.ForceAdvanceRound:output_type -> veto.v1.ForceAdvanceRoundResponse
-	6, // [6:10] is the sub-list for method output_type
-	2, // [2:6] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	10, // 0: veto.v1.CastVoteResponse.vote:type_name -> veto.v1.Vote
+	11, // 1: veto.v1.ForceAdvanceRoundResponse.session:type_name -> veto.v1.Session
+	0,  // 2: veto.v1.VoteService.CastVote:input_type -> veto.v1.CastVoteRequest
+	2,  // 3: veto.v1.VoteService.CastTokenSpend:input_type -> veto.v1.CastTokenSpendRequest
+	4,  // 4: veto.v1.VoteService.LockRoundSubmission:input_type -> veto.v1.LockRoundSubmissionRequest
+	6,  // 5: veto.v1.VoteService.UnlockRoundSubmission:input_type -> veto.v1.UnlockRoundSubmissionRequest
+	8,  // 6: veto.v1.VoteService.ForceAdvanceRound:input_type -> veto.v1.ForceAdvanceRoundRequest
+	1,  // 7: veto.v1.VoteService.CastVote:output_type -> veto.v1.CastVoteResponse
+	3,  // 8: veto.v1.VoteService.CastTokenSpend:output_type -> veto.v1.CastTokenSpendResponse
+	5,  // 9: veto.v1.VoteService.LockRoundSubmission:output_type -> veto.v1.LockRoundSubmissionResponse
+	7,  // 10: veto.v1.VoteService.UnlockRoundSubmission:output_type -> veto.v1.UnlockRoundSubmissionResponse
+	9,  // 11: veto.v1.VoteService.ForceAdvanceRound:output_type -> veto.v1.ForceAdvanceRoundResponse
+	7,  // [7:12] is the sub-list for method output_type
+	2,  // [2:7] is the sub-list for method input_type
+	2,  // [2:2] is the sub-list for extension type_name
+	2,  // [2:2] is the sub-list for extension extendee
+	0,  // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_veto_v1_vote_service_proto_init() }
@@ -535,7 +675,7 @@ func file_veto_v1_vote_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_veto_v1_vote_service_proto_rawDesc), len(file_veto_v1_vote_service_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	VoteService_CastVote_FullMethodName              = "/veto.v1.VoteService/CastVote"
+	VoteService_CastTokenSpend_FullMethodName        = "/veto.v1.VoteService/CastTokenSpend"
 	VoteService_LockRoundSubmission_FullMethodName   = "/veto.v1.VoteService/LockRoundSubmission"
 	VoteService_UnlockRoundSubmission_FullMethodName = "/veto.v1.VoteService/UnlockRoundSubmission"
 	VoteService_ForceAdvanceRound_FullMethodName     = "/veto.v1.VoteService/ForceAdvanceRound"
@@ -34,6 +35,7 @@ const (
 // until the round resolves.
 type VoteServiceClient interface {
 	CastVote(ctx context.Context, in *CastVoteRequest, opts ...grpc.CallOption) (*CastVoteResponse, error)
+	CastTokenSpend(ctx context.Context, in *CastTokenSpendRequest, opts ...grpc.CallOption) (*CastTokenSpendResponse, error)
 	LockRoundSubmission(ctx context.Context, in *LockRoundSubmissionRequest, opts ...grpc.CallOption) (*LockRoundSubmissionResponse, error)
 	UnlockRoundSubmission(ctx context.Context, in *UnlockRoundSubmissionRequest, opts ...grpc.CallOption) (*UnlockRoundSubmissionResponse, error)
 	ForceAdvanceRound(ctx context.Context, in *ForceAdvanceRoundRequest, opts ...grpc.CallOption) (*ForceAdvanceRoundResponse, error)
@@ -51,6 +53,16 @@ func (c *voteServiceClient) CastVote(ctx context.Context, in *CastVoteRequest, o
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CastVoteResponse)
 	err := c.cc.Invoke(ctx, VoteService_CastVote_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *voteServiceClient) CastTokenSpend(ctx context.Context, in *CastTokenSpendRequest, opts ...grpc.CallOption) (*CastTokenSpendResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CastTokenSpendResponse)
+	err := c.cc.Invoke(ctx, VoteService_CastTokenSpend_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -96,6 +108,7 @@ func (c *voteServiceClient) ForceAdvanceRound(ctx context.Context, in *ForceAdva
 // until the round resolves.
 type VoteServiceServer interface {
 	CastVote(context.Context, *CastVoteRequest) (*CastVoteResponse, error)
+	CastTokenSpend(context.Context, *CastTokenSpendRequest) (*CastTokenSpendResponse, error)
 	LockRoundSubmission(context.Context, *LockRoundSubmissionRequest) (*LockRoundSubmissionResponse, error)
 	UnlockRoundSubmission(context.Context, *UnlockRoundSubmissionRequest) (*UnlockRoundSubmissionResponse, error)
 	ForceAdvanceRound(context.Context, *ForceAdvanceRoundRequest) (*ForceAdvanceRoundResponse, error)
@@ -111,6 +124,9 @@ type UnimplementedVoteServiceServer struct{}
 
 func (UnimplementedVoteServiceServer) CastVote(context.Context, *CastVoteRequest) (*CastVoteResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CastVote not implemented")
+}
+func (UnimplementedVoteServiceServer) CastTokenSpend(context.Context, *CastTokenSpendRequest) (*CastTokenSpendResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CastTokenSpend not implemented")
 }
 func (UnimplementedVoteServiceServer) LockRoundSubmission(context.Context, *LockRoundSubmissionRequest) (*LockRoundSubmissionResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method LockRoundSubmission not implemented")
@@ -156,6 +172,24 @@ func _VoteService_CastVote_Handler(srv interface{}, ctx context.Context, dec fun
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(VoteServiceServer).CastVote(ctx, req.(*CastVoteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _VoteService_CastTokenSpend_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CastTokenSpendRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VoteServiceServer).CastTokenSpend(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: VoteService_CastTokenSpend_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VoteServiceServer).CastTokenSpend(ctx, req.(*CastTokenSpendRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -224,6 +258,10 @@ var VoteService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CastVote",
 			Handler:    _VoteService_CastVote_Handler,
+		},
+		{
+			MethodName: "CastTokenSpend",
+			Handler:    _VoteService_CastTokenSpend_Handler,
 		},
 		{
 			MethodName: "LockRoundSubmission",

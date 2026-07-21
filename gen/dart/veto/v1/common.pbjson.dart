@@ -39,13 +39,15 @@ const VetoStrategy$json = {
     {'1': 'VETO_STRATEGY_UNSPECIFIED', '2': 0},
     {'1': 'VETO_STRATEGY_RAW', '2': 1},
     {'1': 'VETO_STRATEGY_TOKEN', '2': 2},
+    {'1': 'VETO_STRATEGY_BUDGET', '2': 3},
   ],
 };
 
 /// Descriptor for `VetoStrategy`. Decode as a `google.protobuf.EnumDescriptorProto`.
 final $typed_data.Uint8List vetoStrategyDescriptor = $convert.base64Decode(
     'CgxWZXRvU3RyYXRlZ3kSHQoZVkVUT19TVFJBVEVHWV9VTlNQRUNJRklFRBAAEhUKEVZFVE9fU1'
-    'RSQVRFR1lfUkFXEAESFwoTVkVUT19TVFJBVEVHWV9UT0tFThAC');
+    'RSQVRFR1lfUkFXEAESFwoTVkVUT19TVFJBVEVHWV9UT0tFThACEhgKFFZFVE9fU1RSQVRFR1lf'
+    'QlVER0VUEAM=');
 
 @$core.Deprecated('Use tempoDescriptor instead')
 const Tempo$json = {
@@ -283,6 +285,7 @@ const RevealedVote$json = {
       '10': 'comment',
       '17': true
     },
+    {'1': 'tokens_spent', '3': 6, '4': 1, '5': 5, '10': 'tokensSpent'},
   ],
   '8': [
     {'1': '_comment'},
@@ -293,8 +296,28 @@ const RevealedVote$json = {
 final $typed_data.Uint8List revealedVoteDescriptor = $convert.base64Decode(
     'CgxSZXZlYWxlZFZvdGUSFwoHaWRlYV9pZBgBIAEoCVIGaWRlYUlkEhcKB3VzZXJfaWQYAiABKA'
     'lSBnVzZXJJZBIhCgxkaXNwbGF5X25hbWUYAyABKAlSC2Rpc3BsYXlOYW1lEhYKBnZldG9lZBgE'
-    'IAEoCFIGdmV0b2VkEh0KB2NvbW1lbnQYBSABKAlIAFIHY29tbWVudIgBAUIKCghfY29tbWVudA'
-    '==');
+    'IAEoCFIGdmV0b2VkEh0KB2NvbW1lbnQYBSABKAlIAFIHY29tbWVudIgBARIhCgx0b2tlbnNfc3'
+    'BlbnQYBiABKAVSC3Rva2Vuc1NwZW50QgoKCF9jb21tZW50');
+
+@$core.Deprecated('Use tokenVetoConfigDescriptor instead')
+const TokenVetoConfig$json = {
+  '1': 'TokenVetoConfig',
+  '2': [
+    {'1': 'tokens_per_round', '3': 1, '4': 1, '5': 5, '10': 'tokensPerRound'},
+    {
+      '1': 'max_tokens_per_idea',
+      '3': 2,
+      '4': 1,
+      '5': 5,
+      '10': 'maxTokensPerIdea'
+    },
+  ],
+};
+
+/// Descriptor for `TokenVetoConfig`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List tokenVetoConfigDescriptor = $convert.base64Decode(
+    'Cg9Ub2tlblZldG9Db25maWcSKAoQdG9rZW5zX3Blcl9yb3VuZBgBIAEoBVIOdG9rZW5zUGVyUm'
+    '91bmQSLQoTbWF4X3Rva2Vuc19wZXJfaWRlYRgCIAEoBVIQbWF4VG9rZW5zUGVySWRlYQ==');
 
 @$core.Deprecated('Use sessionDescriptor instead')
 const Session$json = {
@@ -362,9 +385,20 @@ const Session$json = {
       '6': '.veto.v1.Visibility',
       '10': 'visibility'
     },
+    {
+      '1': 'token_veto_config',
+      '3': 13,
+      '4': 1,
+      '5': 11,
+      '6': '.veto.v1.TokenVetoConfig',
+      '9': 1,
+      '10': 'tokenVetoConfig',
+      '17': true
+    },
   ],
   '8': [
     {'1': '_completed_at'},
+    {'1': '_token_veto_config'},
   ],
 };
 
@@ -378,8 +412,10 @@ final $typed_data.Uint8List sessionDescriptor = $convert.base64Decode(
     'FyZ2V0X3JvdW5kX2NvdW50GAkgASgFUhB0YXJnZXRSb3VuZENvdW50EjkKCmNyZWF0ZWRfYXQY'
     'CiABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wUgljcmVhdGVkQXQSQgoMY29tcGxldG'
     'VkX2F0GAsgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEgAUgtjb21wbGV0ZWRBdIgB'
-    'ARIzCgp2aXNpYmlsaXR5GAwgASgOMhMudmV0by52MS5WaXNpYmlsaXR5Ugp2aXNpYmlsaXR5Qg'
-    '8KDV9jb21wbGV0ZWRfYXQ=');
+    'ARIzCgp2aXNpYmlsaXR5GAwgASgOMhMudmV0by52MS5WaXNpYmlsaXR5Ugp2aXNpYmlsaXR5Ek'
+    'kKEXRva2VuX3ZldG9fY29uZmlnGA0gASgLMhgudmV0by52MS5Ub2tlblZldG9Db25maWdIAVIP'
+    'dG9rZW5WZXRvQ29uZmlniAEBQg8KDV9jb21wbGV0ZWRfYXRCFAoSX3Rva2VuX3ZldG9fY29uZm'
+    'ln');
 
 @$core.Deprecated('Use sessionDetailDescriptor instead')
 const SessionDetail$json = {

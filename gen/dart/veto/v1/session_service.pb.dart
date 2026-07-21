@@ -27,6 +27,7 @@ class CreateSessionRequest extends $pb.GeneratedMessage {
     $1.Tempo? tempo,
     $core.int? targetRoundCount,
     $1.Visibility? visibility,
+    $1.TokenVetoConfig? tokenVetoConfig,
   }) {
     final result = create();
     if (title != null) result.title = title;
@@ -34,6 +35,7 @@ class CreateSessionRequest extends $pb.GeneratedMessage {
     if (tempo != null) result.tempo = tempo;
     if (targetRoundCount != null) result.targetRoundCount = targetRoundCount;
     if (visibility != null) result.visibility = visibility;
+    if (tokenVetoConfig != null) result.tokenVetoConfig = tokenVetoConfig;
     return result;
   }
 
@@ -58,6 +60,8 @@ class CreateSessionRequest extends $pb.GeneratedMessage {
     ..aI(4, _omitFieldNames ? '' : 'targetRoundCount')
     ..aE<$1.Visibility>(5, _omitFieldNames ? '' : 'visibility',
         enumValues: $1.Visibility.values)
+    ..aOM<$1.TokenVetoConfig>(6, _omitFieldNames ? '' : 'tokenVetoConfig',
+        subBuilder: $1.TokenVetoConfig.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -129,6 +133,20 @@ class CreateSessionRequest extends $pb.GeneratedMessage {
   $core.bool hasVisibility() => $_has(4);
   @$pb.TagNumber(5)
   void clearVisibility() => $_clearField(5);
+
+  /// Optional. Token Veto tuning, honored only when veto_strategy == VETO_STRATEGY_TOKEN
+  /// (ignored otherwise). Unset → defaults (10 tokens/round, cap 5/idea). Rejected with
+  /// INVALID_ARGUMENT if max_tokens_per_idea > tokens_per_round or either value < 1. See PLAN-10.
+  @$pb.TagNumber(6)
+  $1.TokenVetoConfig get tokenVetoConfig => $_getN(5);
+  @$pb.TagNumber(6)
+  set tokenVetoConfig($1.TokenVetoConfig value) => $_setField(6, value);
+  @$pb.TagNumber(6)
+  $core.bool hasTokenVetoConfig() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearTokenVetoConfig() => $_clearField(6);
+  @$pb.TagNumber(6)
+  $1.TokenVetoConfig ensureTokenVetoConfig() => $_ensure(5);
 }
 
 class CreateSessionResponse extends $pb.GeneratedMessage {
@@ -653,11 +671,18 @@ class SessionSummary extends $pb.GeneratedMessage {
     $1.Session? session,
     $core.int? participantsCount,
     $core.int? ideasCount,
+    $core.Iterable<$core.String>? participantPreview,
+    $core.String? winningIdeaText,
+    $core.int? votedCount,
   }) {
     final result = create();
     if (session != null) result.session = session;
     if (participantsCount != null) result.participantsCount = participantsCount;
     if (ideasCount != null) result.ideasCount = ideasCount;
+    if (participantPreview != null)
+      result.participantPreview.addAll(participantPreview);
+    if (winningIdeaText != null) result.winningIdeaText = winningIdeaText;
+    if (votedCount != null) result.votedCount = votedCount;
     return result;
   }
 
@@ -678,6 +703,9 @@ class SessionSummary extends $pb.GeneratedMessage {
         subBuilder: $1.Session.create)
     ..aI(2, _omitFieldNames ? '' : 'participantsCount')
     ..aI(3, _omitFieldNames ? '' : 'ideasCount')
+    ..pPS(4, _omitFieldNames ? '' : 'participantPreview')
+    ..aOS(5, _omitFieldNames ? '' : 'winningIdeaText')
+    ..aI(6, _omitFieldNames ? '' : 'votedCount')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -727,6 +755,37 @@ class SessionSummary extends $pb.GeneratedMessage {
   $core.bool hasIdeasCount() => $_has(2);
   @$pb.TagNumber(3)
   void clearIdeasCount() => $_clearField(3);
+
+  /// Preview slice for the dashboard cards (veto #52) — ListSessions' counts alone can't render
+  /// the Home/History cards, so SessionSummary carries a small denormalized preview.
+  ///
+  /// First few participant display names for the avatar stack ("+N others"). Ordering is
+  /// host-first then join order; length is a server-capped preview, not the full roster
+  /// (participants_count is the true total). Empty is valid.
+  @$pb.TagNumber(4)
+  $pb.PbList<$core.String> get participantPreview => $_getList(3);
+
+  /// Winning idea text, set only for completed sessions (SESSION_PHASE_COMPLETE) to render the
+  /// History winner chip. Unset for lobby/voting sessions.
+  @$pb.TagNumber(5)
+  $core.String get winningIdeaText => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set winningIdeaText($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasWinningIdeaText() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearWinningIdeaText() => $_clearField(5);
+
+  /// Participants who have locked their submission in the current round, for the "4/6 voted"
+  /// progress on active cards. 0 outside SESSION_PHASE_VOTING.
+  @$pb.TagNumber(6)
+  $core.int get votedCount => $_getIZ(5);
+  @$pb.TagNumber(6)
+  set votedCount($core.int value) => $_setSignedInt32(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasVotedCount() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearVotedCount() => $_clearField(6);
 }
 
 class ListSessionsResponse extends $pb.GeneratedMessage {

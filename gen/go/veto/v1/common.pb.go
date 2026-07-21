@@ -79,8 +79,13 @@ type VetoStrategy int32
 const (
 	VetoStrategy_VETO_STRATEGY_UNSPECIFIED VetoStrategy = 0
 	VetoStrategy_VETO_STRATEGY_RAW         VetoStrategy = 1
-	// Reserved. Not implemented for MVP — CreateSession rejects it. See VETO_MECHANICS.md open questions.
+	// Token Veto: each participant gets a per-round token pool (TokenVetoConfig) and pours tokens
+	// on ideas to express intensity, capped per idea for fairness. Shares the §4 elimination path
+	// with Raw Veto — only the scoring input differs (token sum vs. veto count). See PLAN-10.
 	VetoStrategy_VETO_STRATEGY_TOKEN VetoStrategy = 2
+	// Reserved. Session-scarce veto budget — a finite pool rationed across the whole session,
+	// not refreshed per round. Not implemented; CreateSession rejects it. See PLAN-10 #4.
+	VetoStrategy_VETO_STRATEGY_BUDGET VetoStrategy = 3
 )
 
 // Enum value maps for VetoStrategy.
@@ -89,11 +94,13 @@ var (
 		0: "VETO_STRATEGY_UNSPECIFIED",
 		1: "VETO_STRATEGY_RAW",
 		2: "VETO_STRATEGY_TOKEN",
+		3: "VETO_STRATEGY_BUDGET",
 	}
 	VetoStrategy_value = map[string]int32{
 		"VETO_STRATEGY_UNSPECIFIED": 0,
 		"VETO_STRATEGY_RAW":         1,
 		"VETO_STRATEGY_TOKEN":       2,
+		"VETO_STRATEGY_BUDGET":      3,
 	}
 )
 
@@ -622,12 +629,17 @@ func (x *Vote) GetUpdatedAt() *timestamppb.Timestamp {
 // A single participant's vote, denormalized with display_name for reveal payloads
 // (RoundResolved, WinnerRevealed, GetVetoTrail) where the client has no other way to resolve it.
 type RevealedVote struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	IdeaId        string                 `protobuf:"bytes,1,opt,name=idea_id,json=ideaId,proto3" json:"idea_id,omitempty"`
-	UserId        string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	DisplayName   string                 `protobuf:"bytes,3,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
-	Vetoed        bool                   `protobuf:"varint,4,opt,name=vetoed,proto3" json:"vetoed,omitempty"`
-	Comment       *string                `protobuf:"bytes,5,opt,name=comment,proto3,oneof" json:"comment,omitempty"`
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	IdeaId      string                 `protobuf:"bytes,1,opt,name=idea_id,json=ideaId,proto3" json:"idea_id,omitempty"`
+	UserId      string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	DisplayName string                 `protobuf:"bytes,3,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
+	Vetoed      bool                   `protobuf:"varint,4,opt,name=vetoed,proto3" json:"vetoed,omitempty"`
+	Comment     *string                `protobuf:"bytes,5,opt,name=comment,proto3,oneof" json:"comment,omitempty"`
+	// Tokens this participant poured on this idea for the resolved round. Always 0 under
+	// VETO_STRATEGY_RAW (the boolean vetoed carries the signal there); the per-idea token
+	// total under VETO_STRATEGY_TOKEN, so the reveal can show how hard an idea was hit.
+	// See PLAN-10 / VETO_MECHANICS.md §5.
+	TokensSpent   int32 `protobuf:"varint,6,opt,name=tokens_spent,json=tokensSpent,proto3" json:"tokens_spent,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -697,6 +709,74 @@ func (x *RevealedVote) GetComment() string {
 	return ""
 }
 
+func (x *RevealedVote) GetTokensSpent() int32 {
+	if x != nil {
+		return x.TokensSpent
+	}
+	return 0
+}
+
+// Per-session configuration for VETO_STRATEGY_TOKEN. Carried on CreateSessionRequest and
+// honored only when veto_strategy == VETO_STRATEGY_TOKEN (ignored for other strategies).
+// Defaults (tokens_per_round=10, max_tokens_per_idea=5) are placeholders pending the PLAN-10
+// scoring spike; the shapes are stable regardless of the tuned values.
+type TokenVetoConfig struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Tokens each participant receives per round. Refills every round — unspent tokens carry
+	// no signal and do not roll over (VETO_MECHANICS.md §5). Must be >= 1. Defaults to 10 when unset.
+	TokensPerRound int32 `protobuf:"varint,1,opt,name=tokens_per_round,json=tokensPerRound,proto3" json:"tokens_per_round,omitempty"`
+	// Max tokens one participant may pour on a single idea in a round. Must be >= 1 and
+	// <= tokens_per_round. Enforces the §5 fairness invariant — one participant's grudge cannot
+	// unilaterally eliminate an idea. Defaults to 5 when unset.
+	MaxTokensPerIdea int32 `protobuf:"varint,2,opt,name=max_tokens_per_idea,json=maxTokensPerIdea,proto3" json:"max_tokens_per_idea,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *TokenVetoConfig) Reset() {
+	*x = TokenVetoConfig{}
+	mi := &file_veto_v1_common_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TokenVetoConfig) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TokenVetoConfig) ProtoMessage() {}
+
+func (x *TokenVetoConfig) ProtoReflect() protoreflect.Message {
+	mi := &file_veto_v1_common_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TokenVetoConfig.ProtoReflect.Descriptor instead.
+func (*TokenVetoConfig) Descriptor() ([]byte, []int) {
+	return file_veto_v1_common_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *TokenVetoConfig) GetTokensPerRound() int32 {
+	if x != nil {
+		return x.TokensPerRound
+	}
+	return 0
+}
+
+func (x *TokenVetoConfig) GetMaxTokensPerIdea() int32 {
+	if x != nil {
+		return x.MaxTokensPerIdea
+	}
+	return 0
+}
+
 type Session struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
 	Id               string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -711,13 +791,18 @@ type Session struct {
 	CreatedAt        *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	CompletedAt      *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=completed_at,json=completedAt,proto3,oneof" json:"completed_at,omitempty"`
 	Visibility       Visibility             `protobuf:"varint,12,opt,name=visibility,proto3,enum=veto.v1.Visibility" json:"visibility,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	// The resolved Token Veto config for this session (defaults applied), so any participant —
+	// not just the host who created it — can render the token HUD and clamp allocation. Set iff
+	// veto_strategy == VETO_STRATEGY_TOKEN; unset for Raw Veto. Carried anywhere Session is
+	// (GetSession, CreateSession, StateSnapshot, …). See PLAN-10.
+	TokenVetoConfig *TokenVetoConfig `protobuf:"bytes,13,opt,name=token_veto_config,json=tokenVetoConfig,proto3,oneof" json:"token_veto_config,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *Session) Reset() {
 	*x = Session{}
-	mi := &file_veto_v1_common_proto_msgTypes[6]
+	mi := &file_veto_v1_common_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -729,7 +814,7 @@ func (x *Session) String() string {
 func (*Session) ProtoMessage() {}
 
 func (x *Session) ProtoReflect() protoreflect.Message {
-	mi := &file_veto_v1_common_proto_msgTypes[6]
+	mi := &file_veto_v1_common_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -742,7 +827,7 @@ func (x *Session) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Session.ProtoReflect.Descriptor instead.
 func (*Session) Descriptor() ([]byte, []int) {
-	return file_veto_v1_common_proto_rawDescGZIP(), []int{6}
+	return file_veto_v1_common_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *Session) GetId() string {
@@ -829,6 +914,13 @@ func (x *Session) GetVisibility() Visibility {
 	return Visibility_VISIBILITY_UNSPECIFIED
 }
 
+func (x *Session) GetTokenVetoConfig() *TokenVetoConfig {
+	if x != nil {
+		return x.TokenVetoConfig
+	}
+	return nil
+}
+
 type SessionDetail struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Session       *Session               `protobuf:"bytes,1,opt,name=session,proto3" json:"session,omitempty"`
@@ -840,7 +932,7 @@ type SessionDetail struct {
 
 func (x *SessionDetail) Reset() {
 	*x = SessionDetail{}
-	mi := &file_veto_v1_common_proto_msgTypes[7]
+	mi := &file_veto_v1_common_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -852,7 +944,7 @@ func (x *SessionDetail) String() string {
 func (*SessionDetail) ProtoMessage() {}
 
 func (x *SessionDetail) ProtoReflect() protoreflect.Message {
-	mi := &file_veto_v1_common_proto_msgTypes[7]
+	mi := &file_veto_v1_common_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -865,7 +957,7 @@ func (x *SessionDetail) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SessionDetail.ProtoReflect.Descriptor instead.
 func (*SessionDetail) Descriptor() ([]byte, []int) {
-	return file_veto_v1_common_proto_rawDescGZIP(), []int{7}
+	return file_veto_v1_common_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *SessionDetail) GetSession() *Session {
@@ -939,15 +1031,19 @@ const file_veto_v1_common_proto_rawDesc = "" +
 	"\n" +
 	"updated_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAtB\n" +
 	"\n" +
-	"\b_comment\"\xa6\x01\n" +
+	"\b_comment\"\xc9\x01\n" +
 	"\fRevealedVote\x12\x17\n" +
 	"\aidea_id\x18\x01 \x01(\tR\x06ideaId\x12\x17\n" +
 	"\auser_id\x18\x02 \x01(\tR\x06userId\x12!\n" +
 	"\fdisplay_name\x18\x03 \x01(\tR\vdisplayName\x12\x16\n" +
 	"\x06vetoed\x18\x04 \x01(\bR\x06vetoed\x12\x1d\n" +
-	"\acomment\x18\x05 \x01(\tH\x00R\acomment\x88\x01\x01B\n" +
+	"\acomment\x18\x05 \x01(\tH\x00R\acomment\x88\x01\x01\x12!\n" +
+	"\ftokens_spent\x18\x06 \x01(\x05R\vtokensSpentB\n" +
 	"\n" +
-	"\b_comment\"\x83\x04\n" +
+	"\b_comment\"j\n" +
+	"\x0fTokenVetoConfig\x12(\n" +
+	"\x10tokens_per_round\x18\x01 \x01(\x05R\x0etokensPerRound\x12-\n" +
+	"\x13max_tokens_per_idea\x18\x02 \x01(\x05R\x10maxTokensPerIdea\"\xe4\x04\n" +
 	"\aSession\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04code\x18\x02 \x01(\tR\x04code\x12\x14\n" +
@@ -964,8 +1060,10 @@ const file_veto_v1_common_proto_rawDesc = "" +
 	"\fcompleted_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampH\x00R\vcompletedAt\x88\x01\x01\x123\n" +
 	"\n" +
 	"visibility\x18\f \x01(\x0e2\x13.veto.v1.VisibilityR\n" +
-	"visibilityB\x0f\n" +
-	"\r_completed_at\"\x9a\x01\n" +
+	"visibility\x12I\n" +
+	"\x11token_veto_config\x18\r \x01(\v2\x18.veto.v1.TokenVetoConfigH\x01R\x0ftokenVetoConfig\x88\x01\x01B\x0f\n" +
+	"\r_completed_atB\x14\n" +
+	"\x12_token_veto_config\"\x9a\x01\n" +
 	"\rSessionDetail\x12*\n" +
 	"\asession\x18\x01 \x01(\v2\x10.veto.v1.SessionR\asession\x128\n" +
 	"\fparticipants\x18\x02 \x03(\v2\x14.veto.v1.ParticipantR\fparticipants\x12#\n" +
@@ -974,11 +1072,12 @@ const file_veto_v1_common_proto_rawDesc = "" +
 	"\x19SESSION_PHASE_UNSPECIFIED\x10\x00\x12\x17\n" +
 	"\x13SESSION_PHASE_LOBBY\x10\x01\x12\x18\n" +
 	"\x14SESSION_PHASE_VOTING\x10\x02\x12\x1a\n" +
-	"\x16SESSION_PHASE_COMPLETE\x10\x03*]\n" +
+	"\x16SESSION_PHASE_COMPLETE\x10\x03*w\n" +
 	"\fVetoStrategy\x12\x1d\n" +
 	"\x19VETO_STRATEGY_UNSPECIFIED\x10\x00\x12\x15\n" +
 	"\x11VETO_STRATEGY_RAW\x10\x01\x12\x17\n" +
-	"\x13VETO_STRATEGY_TOKEN\x10\x02*K\n" +
+	"\x13VETO_STRATEGY_TOKEN\x10\x02\x12\x18\n" +
+	"\x14VETO_STRATEGY_BUDGET\x10\x03*K\n" +
 	"\x05Tempo\x12\x15\n" +
 	"\x11TEMPO_UNSPECIFIED\x10\x00\x12\x18\n" +
 	"\x14TEMPO_QUICK_DECISION\x10\x01\x12\x11\n" +
@@ -1002,7 +1101,7 @@ func file_veto_v1_common_proto_rawDescGZIP() []byte {
 }
 
 var file_veto_v1_common_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
-var file_veto_v1_common_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_veto_v1_common_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_veto_v1_common_proto_goTypes = []any{
 	(SessionPhase)(0),             // 0: veto.v1.SessionPhase
 	(VetoStrategy)(0),             // 1: veto.v1.VetoStrategy
@@ -1014,30 +1113,32 @@ var file_veto_v1_common_proto_goTypes = []any{
 	(*Idea)(nil),                  // 7: veto.v1.Idea
 	(*Vote)(nil),                  // 8: veto.v1.Vote
 	(*RevealedVote)(nil),          // 9: veto.v1.RevealedVote
-	(*Session)(nil),               // 10: veto.v1.Session
-	(*SessionDetail)(nil),         // 11: veto.v1.SessionDetail
-	(*timestamppb.Timestamp)(nil), // 12: google.protobuf.Timestamp
+	(*TokenVetoConfig)(nil),       // 10: veto.v1.TokenVetoConfig
+	(*Session)(nil),               // 11: veto.v1.Session
+	(*SessionDetail)(nil),         // 12: veto.v1.SessionDetail
+	(*timestamppb.Timestamp)(nil), // 13: google.protobuf.Timestamp
 }
 var file_veto_v1_common_proto_depIdxs = []int32{
-	12, // 0: veto.v1.User.created_at:type_name -> google.protobuf.Timestamp
-	12, // 1: veto.v1.Participant.joined_at:type_name -> google.protobuf.Timestamp
+	13, // 0: veto.v1.User.created_at:type_name -> google.protobuf.Timestamp
+	13, // 1: veto.v1.Participant.joined_at:type_name -> google.protobuf.Timestamp
 	6,  // 2: veto.v1.Idea.submitted_by:type_name -> veto.v1.SubmittedBy
-	12, // 3: veto.v1.Idea.created_at:type_name -> google.protobuf.Timestamp
-	12, // 4: veto.v1.Vote.updated_at:type_name -> google.protobuf.Timestamp
+	13, // 3: veto.v1.Idea.created_at:type_name -> google.protobuf.Timestamp
+	13, // 4: veto.v1.Vote.updated_at:type_name -> google.protobuf.Timestamp
 	0,  // 5: veto.v1.Session.phase:type_name -> veto.v1.SessionPhase
 	1,  // 6: veto.v1.Session.veto_strategy:type_name -> veto.v1.VetoStrategy
 	2,  // 7: veto.v1.Session.tempo:type_name -> veto.v1.Tempo
-	12, // 8: veto.v1.Session.created_at:type_name -> google.protobuf.Timestamp
-	12, // 9: veto.v1.Session.completed_at:type_name -> google.protobuf.Timestamp
+	13, // 8: veto.v1.Session.created_at:type_name -> google.protobuf.Timestamp
+	13, // 9: veto.v1.Session.completed_at:type_name -> google.protobuf.Timestamp
 	3,  // 10: veto.v1.Session.visibility:type_name -> veto.v1.Visibility
-	10, // 11: veto.v1.SessionDetail.session:type_name -> veto.v1.Session
-	5,  // 12: veto.v1.SessionDetail.participants:type_name -> veto.v1.Participant
-	7,  // 13: veto.v1.SessionDetail.ideas:type_name -> veto.v1.Idea
-	14, // [14:14] is the sub-list for method output_type
-	14, // [14:14] is the sub-list for method input_type
-	14, // [14:14] is the sub-list for extension type_name
-	14, // [14:14] is the sub-list for extension extendee
-	0,  // [0:14] is the sub-list for field type_name
+	10, // 11: veto.v1.Session.token_veto_config:type_name -> veto.v1.TokenVetoConfig
+	11, // 12: veto.v1.SessionDetail.session:type_name -> veto.v1.Session
+	5,  // 13: veto.v1.SessionDetail.participants:type_name -> veto.v1.Participant
+	7,  // 14: veto.v1.SessionDetail.ideas:type_name -> veto.v1.Idea
+	15, // [15:15] is the sub-list for method output_type
+	15, // [15:15] is the sub-list for method input_type
+	15, // [15:15] is the sub-list for extension type_name
+	15, // [15:15] is the sub-list for extension extendee
+	0,  // [0:15] is the sub-list for field type_name
 }
 
 func init() { file_veto_v1_common_proto_init() }
@@ -1050,14 +1151,14 @@ func file_veto_v1_common_proto_init() {
 	file_veto_v1_common_proto_msgTypes[3].OneofWrappers = []any{}
 	file_veto_v1_common_proto_msgTypes[4].OneofWrappers = []any{}
 	file_veto_v1_common_proto_msgTypes[5].OneofWrappers = []any{}
-	file_veto_v1_common_proto_msgTypes[6].OneofWrappers = []any{}
+	file_veto_v1_common_proto_msgTypes[7].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_veto_v1_common_proto_rawDesc), len(file_veto_v1_common_proto_rawDesc)),
 			NumEnums:      4,
-			NumMessages:   8,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

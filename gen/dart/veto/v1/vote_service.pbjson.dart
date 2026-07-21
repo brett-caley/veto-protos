@@ -55,6 +55,36 @@ const CastVoteResponse$json = {
 final $typed_data.Uint8List castVoteResponseDescriptor = $convert.base64Decode(
     'ChBDYXN0Vm90ZVJlc3BvbnNlEiEKBHZvdGUYASABKAsyDS52ZXRvLnYxLlZvdGVSBHZvdGU=');
 
+@$core.Deprecated('Use castTokenSpendRequestDescriptor instead')
+const CastTokenSpendRequest$json = {
+  '1': 'CastTokenSpendRequest',
+  '2': [
+    {'1': 'code', '3': 1, '4': 1, '5': 9, '10': 'code'},
+    {'1': 'idea_id', '3': 2, '4': 1, '5': 9, '10': 'ideaId'},
+    {'1': 'tokens', '3': 3, '4': 1, '5': 5, '10': 'tokens'},
+  ],
+};
+
+/// Descriptor for `CastTokenSpendRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List castTokenSpendRequestDescriptor = $convert.base64Decode(
+    'ChVDYXN0VG9rZW5TcGVuZFJlcXVlc3QSEgoEY29kZRgBIAEoCVIEY29kZRIXCgdpZGVhX2lkGA'
+    'IgASgJUgZpZGVhSWQSFgoGdG9rZW5zGAMgASgFUgZ0b2tlbnM=');
+
+@$core.Deprecated('Use castTokenSpendResponseDescriptor instead')
+const CastTokenSpendResponse$json = {
+  '1': 'CastTokenSpendResponse',
+  '2': [
+    {'1': 'idea_tokens', '3': 1, '4': 1, '5': 5, '10': 'ideaTokens'},
+    {'1': 'tokens_remaining', '3': 2, '4': 1, '5': 5, '10': 'tokensRemaining'},
+  ],
+};
+
+/// Descriptor for `CastTokenSpendResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List castTokenSpendResponseDescriptor =
+    $convert.base64Decode(
+        'ChZDYXN0VG9rZW5TcGVuZFJlc3BvbnNlEh8KC2lkZWFfdG9rZW5zGAEgASgFUgppZGVhVG9rZW'
+        '5zEikKEHRva2Vuc19yZW1haW5pbmcYAiABKAVSD3Rva2Vuc1JlbWFpbmluZw==');
+
 @$core.Deprecated('Use lockRoundSubmissionRequestDescriptor instead')
 const LockRoundSubmissionRequest$json = {
   '1': 'LockRoundSubmissionRequest',
