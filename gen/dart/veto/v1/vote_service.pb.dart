@@ -172,6 +172,167 @@ class CastVoteResponse extends $pb.GeneratedMessage {
   $1.Vote ensureVote() => $_ensure(0);
 }
 
+/// The Token Veto counterpart to CastVote (VETO_STRATEGY_TOKEN sessions only). Where CastVote is a
+/// binary set-state, token spend carries a magnitude. Idempotent set of the caller's desired total
+/// tokens on one active idea for the current round — not an increment. Same blind-round rules as
+/// CastVote: the spend never broadcasts to other participants; only the aggregate lock count
+/// (RoundLockProgress) and the all-at-once reveal (RoundResolved/WinnerRevealed) are visible.
+/// Rejected if it would exceed max_tokens_per_idea or the caller's remaining per-round budget.
+/// Raw Veto sessions use CastVote instead — the two are mutually exclusive per session by
+/// veto_strategy. See PLAN-10.
+class CastTokenSpendRequest extends $pb.GeneratedMessage {
+  factory CastTokenSpendRequest({
+    $core.String? code,
+    $core.String? ideaId,
+    $core.int? tokens,
+  }) {
+    final result = create();
+    if (code != null) result.code = code;
+    if (ideaId != null) result.ideaId = ideaId;
+    if (tokens != null) result.tokens = tokens;
+    return result;
+  }
+
+  CastTokenSpendRequest._();
+
+  factory CastTokenSpendRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory CastTokenSpendRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'CastTokenSpendRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'veto.v1'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'code')
+    ..aOS(2, _omitFieldNames ? '' : 'ideaId')
+    ..aI(3, _omitFieldNames ? '' : 'tokens')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CastTokenSpendRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CastTokenSpendRequest copyWith(
+          void Function(CastTokenSpendRequest) updates) =>
+      super.copyWith((message) => updates(message as CastTokenSpendRequest))
+          as CastTokenSpendRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static CastTokenSpendRequest create() => CastTokenSpendRequest._();
+  @$core.override
+  CastTokenSpendRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static CastTokenSpendRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<CastTokenSpendRequest>(create);
+  static CastTokenSpendRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get code => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set code($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasCode() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearCode() => $_clearField(1);
+
+  /// Required. Must be an active (non-eliminated) idea in this session.
+  @$pb.TagNumber(2)
+  $core.String get ideaId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set ideaId($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasIdeaId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearIdeaId() => $_clearField(2);
+
+  /// Required. Desired total tokens on this idea for the current round; 0 clears the spend.
+  /// Must be >= 0 and <= max_tokens_per_idea, and must not push the caller's round total over
+  /// tokens_per_round.
+  @$pb.TagNumber(3)
+  $core.int get tokens => $_getIZ(2);
+  @$pb.TagNumber(3)
+  set tokens($core.int value) => $_setSignedInt32(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasTokens() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearTokens() => $_clearField(3);
+}
+
+class CastTokenSpendResponse extends $pb.GeneratedMessage {
+  factory CastTokenSpendResponse({
+    $core.int? ideaTokens,
+    $core.int? tokensRemaining,
+  }) {
+    final result = create();
+    if (ideaTokens != null) result.ideaTokens = ideaTokens;
+    if (tokensRemaining != null) result.tokensRemaining = tokensRemaining;
+    return result;
+  }
+
+  CastTokenSpendResponse._();
+
+  factory CastTokenSpendResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory CastTokenSpendResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'CastTokenSpendResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'veto.v1'),
+      createEmptyInstance: create)
+    ..aI(1, _omitFieldNames ? '' : 'ideaTokens')
+    ..aI(2, _omitFieldNames ? '' : 'tokensRemaining')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CastTokenSpendResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CastTokenSpendResponse copyWith(
+          void Function(CastTokenSpendResponse) updates) =>
+      super.copyWith((message) => updates(message as CastTokenSpendResponse))
+          as CastTokenSpendResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static CastTokenSpendResponse create() => CastTokenSpendResponse._();
+  @$core.override
+  CastTokenSpendResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static CastTokenSpendResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<CastTokenSpendResponse>(create);
+  static CastTokenSpendResponse? _defaultInstance;
+
+  /// Confirmed tokens on this idea for the current round after applying the set.
+  @$pb.TagNumber(1)
+  $core.int get ideaTokens => $_getIZ(0);
+  @$pb.TagNumber(1)
+  set ideaTokens($core.int value) => $_setSignedInt32(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasIdeaTokens() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearIdeaTokens() => $_clearField(1);
+
+  /// The caller's tokens still available this round (tokens_per_round minus the sum of their
+  /// spends across all ideas), so the client HUD can reconcile against the server.
+  @$pb.TagNumber(2)
+  $core.int get tokensRemaining => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set tokensRemaining($core.int value) => $_setSignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasTokensRemaining() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearTokensRemaining() => $_clearField(2);
+}
+
 /// Lock in the caller's current veto choices for this round. If this lock brings locked_count to
 /// participants_count, the round resolves immediately — the same resolution path as timer expiry
 /// or force-advance.

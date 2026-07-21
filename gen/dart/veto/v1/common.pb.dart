@@ -569,6 +569,7 @@ class RevealedVote extends $pb.GeneratedMessage {
     $core.String? displayName,
     $core.bool? vetoed,
     $core.String? comment,
+    $core.int? tokensSpent,
   }) {
     final result = create();
     if (ideaId != null) result.ideaId = ideaId;
@@ -576,6 +577,7 @@ class RevealedVote extends $pb.GeneratedMessage {
     if (displayName != null) result.displayName = displayName;
     if (vetoed != null) result.vetoed = vetoed;
     if (comment != null) result.comment = comment;
+    if (tokensSpent != null) result.tokensSpent = tokensSpent;
     return result;
   }
 
@@ -597,6 +599,7 @@ class RevealedVote extends $pb.GeneratedMessage {
     ..aOS(3, _omitFieldNames ? '' : 'displayName')
     ..aOB(4, _omitFieldNames ? '' : 'vetoed')
     ..aOS(5, _omitFieldNames ? '' : 'comment')
+    ..aI(6, _omitFieldNames ? '' : 'tokensSpent')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -662,6 +665,94 @@ class RevealedVote extends $pb.GeneratedMessage {
   $core.bool hasComment() => $_has(4);
   @$pb.TagNumber(5)
   void clearComment() => $_clearField(5);
+
+  /// Tokens this participant poured on this idea for the resolved round. Always 0 under
+  /// VETO_STRATEGY_RAW (the boolean vetoed carries the signal there); the per-idea token
+  /// total under VETO_STRATEGY_TOKEN, so the reveal can show how hard an idea was hit.
+  /// See PLAN-10 / VETO_MECHANICS.md §5.
+  @$pb.TagNumber(6)
+  $core.int get tokensSpent => $_getIZ(5);
+  @$pb.TagNumber(6)
+  set tokensSpent($core.int value) => $_setSignedInt32(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasTokensSpent() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearTokensSpent() => $_clearField(6);
+}
+
+/// Per-session configuration for VETO_STRATEGY_TOKEN. Carried on CreateSessionRequest and
+/// honored only when veto_strategy == VETO_STRATEGY_TOKEN (ignored for other strategies).
+/// Defaults (tokens_per_round=10, max_tokens_per_idea=5) are placeholders pending the PLAN-10
+/// scoring spike; the shapes are stable regardless of the tuned values.
+class TokenVetoConfig extends $pb.GeneratedMessage {
+  factory TokenVetoConfig({
+    $core.int? tokensPerRound,
+    $core.int? maxTokensPerIdea,
+  }) {
+    final result = create();
+    if (tokensPerRound != null) result.tokensPerRound = tokensPerRound;
+    if (maxTokensPerIdea != null) result.maxTokensPerIdea = maxTokensPerIdea;
+    return result;
+  }
+
+  TokenVetoConfig._();
+
+  factory TokenVetoConfig.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory TokenVetoConfig.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'TokenVetoConfig',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'veto.v1'),
+      createEmptyInstance: create)
+    ..aI(1, _omitFieldNames ? '' : 'tokensPerRound')
+    ..aI(2, _omitFieldNames ? '' : 'maxTokensPerIdea')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  TokenVetoConfig clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  TokenVetoConfig copyWith(void Function(TokenVetoConfig) updates) =>
+      super.copyWith((message) => updates(message as TokenVetoConfig))
+          as TokenVetoConfig;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static TokenVetoConfig create() => TokenVetoConfig._();
+  @$core.override
+  TokenVetoConfig createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static TokenVetoConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<TokenVetoConfig>(create);
+  static TokenVetoConfig? _defaultInstance;
+
+  /// Tokens each participant receives per round. Refills every round — unspent tokens carry
+  /// no signal and do not roll over (VETO_MECHANICS.md §5). Must be >= 1. Defaults to 10 when unset.
+  @$pb.TagNumber(1)
+  $core.int get tokensPerRound => $_getIZ(0);
+  @$pb.TagNumber(1)
+  set tokensPerRound($core.int value) => $_setSignedInt32(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasTokensPerRound() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearTokensPerRound() => $_clearField(1);
+
+  /// Max tokens one participant may pour on a single idea in a round. Must be >= 1 and
+  /// <= tokens_per_round. Enforces the §5 fairness invariant — one participant's grudge cannot
+  /// unilaterally eliminate an idea. Defaults to 5 when unset.
+  @$pb.TagNumber(2)
+  $core.int get maxTokensPerIdea => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set maxTokensPerIdea($core.int value) => $_setSignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasMaxTokensPerIdea() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearMaxTokensPerIdea() => $_clearField(2);
 }
 
 class Session extends $pb.GeneratedMessage {
@@ -678,6 +769,7 @@ class Session extends $pb.GeneratedMessage {
     $0.Timestamp? createdAt,
     $0.Timestamp? completedAt,
     Visibility? visibility,
+    TokenVetoConfig? tokenVetoConfig,
   }) {
     final result = create();
     if (id != null) result.id = id;
@@ -692,6 +784,7 @@ class Session extends $pb.GeneratedMessage {
     if (createdAt != null) result.createdAt = createdAt;
     if (completedAt != null) result.completedAt = completedAt;
     if (visibility != null) result.visibility = visibility;
+    if (tokenVetoConfig != null) result.tokenVetoConfig = tokenVetoConfig;
     return result;
   }
 
@@ -725,6 +818,8 @@ class Session extends $pb.GeneratedMessage {
         subBuilder: $0.Timestamp.create)
     ..aE<Visibility>(12, _omitFieldNames ? '' : 'visibility',
         enumValues: Visibility.values)
+    ..aOM<TokenVetoConfig>(13, _omitFieldNames ? '' : 'tokenVetoConfig',
+        subBuilder: TokenVetoConfig.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -856,6 +951,21 @@ class Session extends $pb.GeneratedMessage {
   $core.bool hasVisibility() => $_has(11);
   @$pb.TagNumber(12)
   void clearVisibility() => $_clearField(12);
+
+  /// The resolved Token Veto config for this session (defaults applied), so any participant —
+  /// not just the host who created it — can render the token HUD and clamp allocation. Set iff
+  /// veto_strategy == VETO_STRATEGY_TOKEN; unset for Raw Veto. Carried anywhere Session is
+  /// (GetSession, CreateSession, StateSnapshot, …). See PLAN-10.
+  @$pb.TagNumber(13)
+  TokenVetoConfig get tokenVetoConfig => $_getN(12);
+  @$pb.TagNumber(13)
+  set tokenVetoConfig(TokenVetoConfig value) => $_setField(13, value);
+  @$pb.TagNumber(13)
+  $core.bool hasTokenVetoConfig() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearTokenVetoConfig() => $_clearField(13);
+  @$pb.TagNumber(13)
+  TokenVetoConfig ensureTokenVetoConfig() => $_ensure(12);
 }
 
 class SessionDetail extends $pb.GeneratedMessage {

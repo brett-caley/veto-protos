@@ -55,10 +55,21 @@ const CreateSessionRequest$json = {
       '10': 'visibility',
       '17': true
     },
+    {
+      '1': 'token_veto_config',
+      '3': 6,
+      '4': 1,
+      '5': 11,
+      '6': '.veto.v1.TokenVetoConfig',
+      '9': 2,
+      '10': 'tokenVetoConfig',
+      '17': true
+    },
   ],
   '8': [
     {'1': '_target_round_count'},
     {'1': '_visibility'},
+    {'1': '_token_veto_config'},
   ],
 };
 
@@ -68,8 +79,9 @@ final $typed_data.Uint8List createSessionRequestDescriptor = $convert.base64Deco
     'JhdGVneRgCIAEoDjIVLnZldG8udjEuVmV0b1N0cmF0ZWd5Ugx2ZXRvU3RyYXRlZ3kSJAoFdGVt'
     'cG8YAyABKA4yDi52ZXRvLnYxLlRlbXBvUgV0ZW1wbxIxChJ0YXJnZXRfcm91bmRfY291bnQYBC'
     'ABKAVIAFIQdGFyZ2V0Um91bmRDb3VudIgBARI4Cgp2aXNpYmlsaXR5GAUgASgOMhMudmV0by52'
-    'MS5WaXNpYmlsaXR5SAFSCnZpc2liaWxpdHmIAQFCFQoTX3RhcmdldF9yb3VuZF9jb3VudEINCg'
-    'tfdmlzaWJpbGl0eQ==');
+    'MS5WaXNpYmlsaXR5SAFSCnZpc2liaWxpdHmIAQESSQoRdG9rZW5fdmV0b19jb25maWcYBiABKA'
+    'syGC52ZXRvLnYxLlRva2VuVmV0b0NvbmZpZ0gCUg90b2tlblZldG9Db25maWeIAQFCFQoTX3Rh'
+    'cmdldF9yb3VuZF9jb3VudEINCgtfdmlzaWJpbGl0eUIUChJfdG9rZW5fdmV0b19jb25maWc=');
 
 @$core.Deprecated('Use createSessionResponseDescriptor instead')
 const CreateSessionResponse$json = {
@@ -246,6 +258,26 @@ const SessionSummary$json = {
       '10': 'participantsCount'
     },
     {'1': 'ideas_count', '3': 3, '4': 1, '5': 5, '10': 'ideasCount'},
+    {
+      '1': 'participant_preview',
+      '3': 4,
+      '4': 3,
+      '5': 9,
+      '10': 'participantPreview'
+    },
+    {
+      '1': 'winning_idea_text',
+      '3': 5,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'winningIdeaText',
+      '17': true
+    },
+    {'1': 'voted_count', '3': 6, '4': 1, '5': 5, '10': 'votedCount'},
+  ],
+  '8': [
+    {'1': '_winning_idea_text'},
   ],
 };
 
@@ -253,7 +285,10 @@ const SessionSummary$json = {
 final $typed_data.Uint8List sessionSummaryDescriptor = $convert.base64Decode(
     'Cg5TZXNzaW9uU3VtbWFyeRIqCgdzZXNzaW9uGAEgASgLMhAudmV0by52MS5TZXNzaW9uUgdzZX'
     'NzaW9uEi0KEnBhcnRpY2lwYW50c19jb3VudBgCIAEoBVIRcGFydGljaXBhbnRzQ291bnQSHwoL'
-    'aWRlYXNfY291bnQYAyABKAVSCmlkZWFzQ291bnQ=');
+    'aWRlYXNfY291bnQYAyABKAVSCmlkZWFzQ291bnQSLwoTcGFydGljaXBhbnRfcHJldmlldxgEIA'
+    'MoCVIScGFydGljaXBhbnRQcmV2aWV3Ei8KEXdpbm5pbmdfaWRlYV90ZXh0GAUgASgJSABSD3dp'
+    'bm5pbmdJZGVhVGV4dIgBARIfCgt2b3RlZF9jb3VudBgGIAEoBVIKdm90ZWRDb3VudEIUChJfd2'
+    'lubmluZ19pZGVhX3RleHQ=');
 
 @$core.Deprecated('Use listSessionsResponseDescriptor instead')
 const ListSessionsResponse$json = {

@@ -42,6 +42,13 @@ class VoteServiceClient extends $grpc.Client {
     return $createUnaryCall(_$castVote, request, options: options);
   }
 
+  $grpc.ResponseFuture<$0.CastTokenSpendResponse> castTokenSpend(
+    $0.CastTokenSpendRequest request, {
+    $grpc.CallOptions? options,
+  }) {
+    return $createUnaryCall(_$castTokenSpend, request, options: options);
+  }
+
   $grpc.ResponseFuture<$0.LockRoundSubmissionResponse> lockRoundSubmission(
     $0.LockRoundSubmissionRequest request, {
     $grpc.CallOptions? options,
@@ -70,6 +77,11 @@ class VoteServiceClient extends $grpc.Client {
           '/veto.v1.VoteService/CastVote',
           ($0.CastVoteRequest value) => value.writeToBuffer(),
           $0.CastVoteResponse.fromBuffer);
+  static final _$castTokenSpend =
+      $grpc.ClientMethod<$0.CastTokenSpendRequest, $0.CastTokenSpendResponse>(
+          '/veto.v1.VoteService/CastTokenSpend',
+          ($0.CastTokenSpendRequest value) => value.writeToBuffer(),
+          $0.CastTokenSpendResponse.fromBuffer);
   static final _$lockRoundSubmission = $grpc.ClientMethod<
           $0.LockRoundSubmissionRequest, $0.LockRoundSubmissionResponse>(
       '/veto.v1.VoteService/LockRoundSubmission',
@@ -99,6 +111,15 @@ abstract class VoteServiceBase extends $grpc.Service {
         false,
         ($core.List<$core.int> value) => $0.CastVoteRequest.fromBuffer(value),
         ($0.CastVoteResponse value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.CastTokenSpendRequest,
+            $0.CastTokenSpendResponse>(
+        'CastTokenSpend',
+        castTokenSpend_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) =>
+            $0.CastTokenSpendRequest.fromBuffer(value),
+        ($0.CastTokenSpendResponse value) => value.writeToBuffer()));
     $addMethod($grpc.ServiceMethod<$0.LockRoundSubmissionRequest,
             $0.LockRoundSubmissionResponse>(
         'LockRoundSubmission',
@@ -135,6 +156,15 @@ abstract class VoteServiceBase extends $grpc.Service {
 
   $async.Future<$0.CastVoteResponse> castVote(
       $grpc.ServiceCall call, $0.CastVoteRequest request);
+
+  $async.Future<$0.CastTokenSpendResponse> castTokenSpend_Pre(
+      $grpc.ServiceCall $call,
+      $async.Future<$0.CastTokenSpendRequest> $request) async {
+    return castTokenSpend($call, await $request);
+  }
+
+  $async.Future<$0.CastTokenSpendResponse> castTokenSpend(
+      $grpc.ServiceCall call, $0.CastTokenSpendRequest request);
 
   $async.Future<$0.LockRoundSubmissionResponse> lockRoundSubmission_Pre(
       $grpc.ServiceCall $call,
